@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>アペックス・ドライブ</title>
+<style>
+:root{--bg:#10151c;--panel:#1b222c;--ink:#eef2f6;--dim:#8d9aab;--hot:#ff5a36;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c}}
+:root[data-theme="dark"]{--bg:#10151c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Bahnschrift,"Hiragino Sans","Yu Gothic",sans-serif}
+#w{position:relative;max-width:960px;margin:0 auto;aspect-ratio:16/9;max-height:100%}
+#c{width:100%;height:100%;display:block;background:#000}
+canvas:not(#c){width:260px;max-width:100%;height:auto;background:transparent}
+#ov,#ps{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,14,20,.88);text-align:center;padding:10px;overflow:auto}
+#ps{background:rgba(10,14,20,.94);font-size:14px}
+#ps[hidden]{display:none}
+h1,h2{margin:0}h1{font-size:clamp(20px,4.6vw,40px);letter-spacing:.04em}
+#ov p,#ps p{margin:0;color:var(--dim);font-size:clamp(11px,1.7vw,14px);max-width:640px}
+.cars{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.cars button{background:var(--panel);color:var(--ink);border:2px solid #2d3745;border-radius:8px;padding:9px 13px;min-width:130px;font:inherit;cursor:pointer}
+.cars button:hover,.cars button:focus-visible{border-color:var(--hot);outline:none}
+.cars b{display:block;font-size:15px}.cars span{display:block;font-size:11px;color:var(--dim)}
+#ps label{display:flex;gap:10px;align-items:center}#ps select,#ps input{font:inherit}
+.cars button.big{font-size:22px;padding:14px 40px;background:var(--hot);border-color:var(--hot);font-weight:700}.cars button:disabled{opacity:.4;cursor:default}
+.coin{color:#f2c230;font-weight:700}.gl{display:flex;gap:12px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:480px;width:100%;max-height:330px;overflow-y:auto}
+#ov>:first-child,#ps>:first-child{margin-top:auto}#ov>:last-child,#ps>:last-child{margin-bottom:auto}
+.slot{background:var(--panel);border:2px solid #2d3745;border-radius:8px;padding:6px 2px;font:inherit;color:var(--ink);cursor:pointer;font-size:10px}.slot.lock{opacity:.35;cursor:default}
+.sw{height:18px;border-radius:4px;margin:0 auto 4px;width:70%}
+.spec{background:var(--panel);border-radius:10px;padding:10px 14px;min-width:250px;text-align:left;font-size:12px}
+.bar{height:6px;background:#2d3745;border-radius:3px;margin:2px 0 6px}.bar i{display:block;height:100%;border-radius:3px;background:var(--hot)}
+.lv{font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px}.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.chips span{background:var(--panel);border-radius:999px;padding:3px 10px;font-size:12px}
+.pulse{animation:pl .5s infinite alternate}@keyframes pl{to{transform:scale(1.25)}}
+#ps{background:radial-gradient(ellipse at 25% 0,rgba(255,90,54,.2),transparent 55%),rgba(8,11,16,.95);backdrop-filter:blur(6px)}
+#ps h2{font-size:28px;letter-spacing:.18em;display:flex;flex-direction:column;align-items:flex-start;width:min(720px,100%);border-left:4px solid var(--hot);padding-left:12px;margin-bottom:6px}
+#ps h2 small{font-size:11px;letter-spacing:.4em;color:var(--hot)}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;width:min(720px,100%)}
+#ps .pg label{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.14);font-size:13px;background:rgba(255,255,255,.04)}
+#ps select{background:#0e141c;color:#fff;border:1px solid rgba(255,255,255,.3);padding:4px 8px;border-radius:0}
+#ps input[type=range]{accent-color:#ff5a36;width:130px}
+#ps .cars button{min-width:150px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-bottom:3px solid var(--hot);border-radius:0;font-weight:700;letter-spacing:.1em}
+@media (max-width:600px){.pg{grid-template-columns:1fr}}
+.cap{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 40%,#111);box-shadow:0 0 30px var(--c);animation:shk .12s infinite}
+.cap.idle{animation:flt 2s ease-in-out infinite alternate;box-shadow:0 0 18px var(--c)}
+@keyframes shk{0%{transform:translate(-3px,0) rotate(-4deg)}50%{transform:translate(3px,0) rotate(4deg)}100%{transform:translate(-3px,0) rotate(-4deg)}}
+@keyframes flt{to{transform:translateY(-10px)}}
+.flash{width:100%;height:150px;background:radial-gradient(circle,#fff,var(--c) 40%,transparent 70%);animation:fl .5s ease-out}
+@keyframes fl{from{transform:scale(.2);opacity:1}to{transform:scale(2.2);opacity:.2}}
+.rv{position:relative;width:100%;height:56px;display:flex;justify-content:center;align-items:center;overflow:hidden}
+.rays{position:absolute;inset:-200px;background:repeating-conic-gradient(from 0deg,var(--c) 0 6deg,transparent 6deg 18deg);opacity:.25;animation:spn 8s linear infinite}
+@keyframes spn{to{transform:rotate(360deg)}}
+.rbn{position:relative;font-size:38px;font-weight:900;letter-spacing:.3em;color:var(--c);text-shadow:0 0 18px var(--c);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.slide{animation:sl .6s ease-out}@keyframes sl{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.g10{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:560px}.gi{border:2px solid;border-radius:6px;padding:4px;font-size:10px;background:rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;animation:pop .4s backwards}.gi span{color:#fff}.gi i{font-style:normal;color:#9fb0c4}
+.gt{width:100%;max-width:900px;display:flex;flex-direction:column;gap:14px}.gtop{display:flex;justify-content:space-between;align-items:center;font-size:14px;letter-spacing:.08em}
+.xpb{display:inline-block;width:120px;height:4px;background:#2d3745;margin-left:10px;vertical-align:middle}.xpb i{display:block;height:100%;background:#fff}
+.gtt{font-weight:700;letter-spacing:.3em;opacity:.8}.cr{font-weight:700}.gmid{display:flex;gap:28px;justify-content:center;align-items:center;flex-wrap:wrap}
+.gname{font-size:20px;font-weight:700;letter-spacing:.05em}.gstat{min-width:230px;text-align:left;font-size:12px}
+.gtiles{display:flex;gap:10px;justify-content:center}
+.tile{flex:1;max-width:230px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-bottom:3px solid var(--hot);color:#fff;padding:12px 10px;font:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px}
+.tile:hover,.tile:focus-visible{background:rgba(255,255,255,.18);outline:none}.tile small{font-size:10px;letter-spacing:.25em;opacity:.7}.tile b{font-size:20px}.tile i{font-style:normal;font-size:11px;opacity:.75}
+.tile.pri{background:linear-gradient(90deg,#ff5a36,#ff8a3c)}
+.cpick{display:flex;gap:10px;align-items:center;justify-content:center;font-size:13px}.cpick button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:30px;height:28px;cursor:pointer}
+.gtiles{flex-wrap:wrap}.tile{min-width:150px;padding:7px 10px}.tile b{font-size:16px}.tile i{font-size:10px}
+.cl{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;font-size:12px}.cl select{background:#0e141c;color:#fff;border:1px solid #445;padding:3px 6px;max-width:210px}
+.chips2{display:flex;flex-wrap:wrap;gap:4px}.chip{background:rgba(255,255,255,.06);border:1px solid var(--c,#8896a8);color:var(--c,#cfd8e3);padding:3px 7px;font-size:11px;border-radius:4px;cursor:pointer}.chip.on{background:var(--c,#8896a8);color:#0b0e13;font-weight:700}.chip b{font-weight:900}
+#gear{position:absolute;right:8px;top:124px;width:36px;height:36px;border-radius:8px;border:0;background:rgba(27,34,44,.8);color:var(--ink);font-size:18px;cursor:pointer}
+@media (max-width:600px){.cars button{padding:5px 7px;min-width:96px}#ov,#ps{gap:6px}}
+#pad{display:none;justify-content:space-between;padding:10px;gap:10px}
+#pad div{display:flex;gap:10px}
+#pad button{width:58px;height:64px;border-radius:10px;border:0;background:var(--panel);color:var(--ink);font-size:20px;touch-action:none}
+@media (pointer:coarse){#pad{display:flex}}
+</style></head><body>
+<div id="w"><canvas id="c" width="960" height="540"></canvas>
+<div id="ov"><h1>アペックス・ドライブ</h1><p id="m"></p><div id="scr" style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%"></div></div>
+<div id="ps" hidden><h2><small>PAUSE</small>設定・ポーズ</h2><div class="pg">
+<label>音量 <input type="range" id="vlm" min="0" max="100" value="60"></label>
+<label>難易度 <select id="df"><option value="0.9">イージー</option><option value="1" selected>ノーマル</option><option value="1.06">ハード</option></select></label>
+<label>周回数 <select id="lp"><option selected>1</option><option>2</option><option>3</option></select></label>
+<label>カーブ <select id="cvf"><option value="0.6">ゆるやか</option><option value="1" selected>ふつう</option><option value="1.4">きつい</option></select></label>
+<label>ライバル数 <select id="rv"><option value="3">3</option><option value="5">5</option><option value="7" selected>7</option><option value="9">9</option></select></label>
+<label>レーン数 <select id="ln"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option></select></label>
+<label>操作アシスト <select id="asi"><option value="2">かんたん</option><option value="1" selected>ふつう</option><option value="0">オフ</option></select></label>
+<label>ゲーム速度 <select id="spd"><option value="1">×1（実時間）</option><option value="1.5">×1.5</option><option value="2" selected>×2</option><option value="3">×3</option></select></label>
+<label>天候 <select id="wx"><option value="0" selected>晴れ</option><option value="1">雨</option><option value="2">霧</option></select></label>
+<label>時間帯 <select id="tod"><option value="0" selected>昼</option><option value="1">夕暮れ</option><option value="2">夜</option></select></label>
+</div><div class="cars"><button id="rs">再開 / 閉じる</button><button id="rr">リスタート</button><button id="hm">ホームへ</button></div>
+<p>←→ ハンドル　↑ アクセル（かんたんは自動）　↓ ブレーキ　Shift ブースト　Esc ポーズ<br>難易度・周回数・時間帯は次のスタートから反映されます</p></div>
+<button id="gear" aria-label="設定">⚙</button></div>
+<div id="pad"><div><button data-k="l">◀</button><button data-k="r">▶</button></div><div><button data-k="b">B</button><button data-k="g">A</button><button data-k="n">N</button></div></div>
+<script>
+const C=document.getElementById('c'),g=C.getContext('2d'),W=960,H=540,HOR=215,N=130,SEGM=4,MAXPS=1200,$=id=>document.getElementById(id);
+/* 車：出力は最大1000PS。加速はトラクション上限と出力(P/mv)と空気抵抗から計算 */
+const CARS=[
+{n:'コンパクト',rr:0,ps:150,m:1000,al:5,cda:.8,br:9,grip:1.3,col:'#8fd16b'},
+{n:'ホットハッチ',rr:0,ps:300,m:1100,al:7.5,cda:.78,br:10,grip:1.25,col:'#2f9bff'},
+{n:'ラグジュアリーセダン',rr:0,ps:400,m:1700,al:6.5,cda:.72,br:9.5,grip:1,col:'#aab4c0'},
+{n:'ラリーターボ',rr:1,ps:450,m:1300,al:9,cda:.85,br:10.5,grip:1.3,col:'#ff9b2f'},
+{n:'スポーツクーペ',rr:1,ps:600,m:1450,al:10,cda:.78,br:11,grip:1.05,col:'#ff5a36'},
+{n:'マッスルV8',rr:1,ps:650,m:1700,al:7.5,cda:.85,br:10,grip:.95,col:'#d6342a'},
+{n:'ミッドシップ',rr:2,ps:750,m:1350,al:11,cda:.72,br:12,grip:1,col:'#c14bff'},
+{n:'GTスーパー',rr:2,ps:850,m:1450,al:12,cda:.72,br:12.5,grip:1,col:'#17c6b8'},
+{n:'ハイパーカー',rr:3,ps:1000,m:1300,al:14.5,cda:.70,br:14,grip:.9,col:'#f2c230'},
+{n:'レーシングプロト',rr:3,ps:1000,m:900,al:16,cda:.60,br:15,grip:.85,col:'#eef2f6'},
+{n:'ミニバン',rr:0,ps:200,m:1600,al:4.5,cda:.9,br:9,grip:1.1,col:'#e6c07b'},
+{n:'オープンスポーツ',rr:0,ps:260,m:1050,al:6.5,cda:.8,br:10,grip:1.3,col:'#ff7ab8'},
+{n:'SUV',rr:0,ps:350,m:1900,al:6,cda:.95,br:9.5,grip:1,col:'#5f7a5a'},
+{n:'ピックアップ',rr:0,ps:320,m:2100,al:5.5,cda:1,br:9,grip:.95,col:'#a8683a'},
+{n:'ホットセダン',rr:1,ps:500,m:1500,al:8.5,cda:.75,br:10.5,grip:1.1,col:'#3d5afe'},
+{n:'ライトウェイト',rr:1,ps:420,m:850,al:9,cda:.7,br:11.5,grip:1.35,col:'#ffd23f'},
+{n:'ターボクーペ',rr:1,ps:700,m:1500,al:9,cda:.76,br:11,grip:1.05,col:'#00bcd4'},
+{n:'AWDスーパー',rr:2,ps:800,m:1550,al:13,cda:.74,br:12.5,grip:1.15,col:'#ff3d00'},
+{n:'ハイブリッドGT',rr:2,ps:900,m:1700,al:14,cda:.73,br:13,grip:1.05,col:'#76ff03'},
+{n:'ジェットカー',rr:3,ps:1000,m:1000,al:17,cda:.55,br:16,grip:.8,col:'#ff00aa'},
+{n:'ゴールデンGT',rr:3,ps:1000,m:1250,al:15.5,cda:.62,br:14.5,grip:.95,col:'#ffd700'},
+{n:'ミニクーペ',rr:0,ps:170,m:950,al:5.5,cda:.78,br:9.5,grip:1.3,col:'#ffb3c1'},
+{n:'ステーションワゴン',rr:0,ps:260,m:1600,al:5.5,cda:.85,br:9,grip:1.05,col:'#8ca0b3'},
+{n:'ホットミニバン',rr:0,ps:380,m:1650,al:6,cda:.9,br:9,grip:1,col:'#c97bff'},
+{n:'クラシックロードスター',rr:0,ps:180,m:950,al:5,cda:.8,br:9,grip:1.2,col:'#7fd1ae'},
+{n:'ツーリングセダン',rr:1,ps:520,m:1450,al:8.5,cda:.74,br:11,grip:1.1,col:'#2e86de'},
+{n:'オフロードSUV',rr:1,ps:480,m:1900,al:8,cda:.95,br:10,grip:1.15,col:'#b8860b'},
+{n:'ホットピックアップ',rr:1,ps:550,m:1900,al:8,cda:.95,br:9.5,grip:1,col:'#e67e22'},
+{n:'ドリフトクーペ',rr:1,ps:620,m:1350,al:9,cda:.76,br:11,grip:.95,col:'#9b59b6'},
+{n:'グランドツアラー',rr:1,ps:680,m:1650,al:9,cda:.74,br:11.5,grip:1.05,col:'#34495e'},
+{n:'ライトウェイトRS',rr:2,ps:780,m:1000,al:12.5,cda:.7,br:13.5,grip:1.25,col:'#f1c40f'},
+{n:'ターボスーパー',rr:2,ps:880,m:1400,al:13,cda:.72,br:12.5,grip:1.05,col:'#e74c3c'},
+{n:'ハイブリッドスーパー',rr:2,ps:920,m:1500,al:14,cda:.7,br:13,grip:1.1,col:'#1abc9c'},
+{n:'ステルスプロト',rr:3,ps:1000,m:950,al:16.5,cda:.58,br:15,grip:.85,col:'#2c3e50'},
+{n:'サンダーGT',rr:3,ps:1000,m:1200,al:15.5,cda:.62,br:14.5,grip:.95,col:'#00e5ff'},
+{n:'ネオンスペシャル',rr:3,ps:1000,m:1100,al:16,cda:.6,br:15,grip:.9,col:'#ff00e1'},
+{n:'ゴーストレーサー',rr:3,ps:1000,m:1000,al:16,cda:.58,br:15,grip:.88,col:'#bdc3c7'},
+{n:'ベーシックセダン',rr:0,ps:140,m:1150,al:4.8,cda:.8,br:9,grip:1.1,col:'#c7ccd1'},
+{n:'シティコミューター',rr:0,ps:110,m:850,al:4.2,cda:.78,br:9,grip:1.2,col:'#ffe08a'},
+{n:'ワークスバン',rr:0,ps:220,m:1400,al:4.5,cda:.95,br:8.5,grip:1,col:'#9fb59a'},
+{n:'ミニトラック',rr:0,ps:190,m:1050,al:4.8,cda:.9,br:8.5,grip:1.05,col:'#d9a066'},
+{n:'ホットクーペR',rr:1,ps:560,m:1400,al:8.8,cda:.76,br:11,grip:1.05,col:'#ff4d8d'},
+{n:'ラリースペシャル',rr:1,ps:500,m:1250,al:10,cda:.84,br:11,grip:1.35,col:'#3aa0ff'},
+{n:'ハイウェイクルーザー',rr:1,ps:590,m:1750,al:8.5,cda:.8,br:10.5,grip:1,col:'#4a5568'},
+{n:'スポーツワゴンRS',rr:1,ps:530,m:1500,al:8.6,cda:.82,br:10.5,grip:1.1,col:'#6bd0c1'},
+{n:'エクストリームGT',rr:2,ps:840,m:1450,al:12.5,cda:.72,br:12.5,grip:1.05,col:'#ff7a00'},
+{n:'サーキットスペシャル',rr:2,ps:760,m:1050,al:12,cda:.7,br:13,grip:1.25,col:'#00c2ff'},
+{n:'ツインターボR',rr:2,ps:900,m:1550,al:13,cda:.72,br:12.8,grip:1.08,col:'#c0392b'},
+{n:'アルティメットSUV',rr:2,ps:700,m:1950,al:11,cda:.9,br:11.5,grip:1.2,col:'#27ae60'},
+{n:'プロトタイプX',rr:3,ps:1000,m:920,al:16.5,cda:.57,br:15,grip:.86,col:'#f5f5f5'},
+{n:'ストームGT',rr:3,ps:1000,m:1180,al:15.8,cda:.62,br:14.8,grip:.95,col:'#8e44ad'},
+{n:'クリムゾンスーパー',rr:3,ps:1000,m:1120,al:16,cda:.6,br:15,grip:.9,col:'#b71c1c'},
+{n:'ヴァルキリー',rr:4,ps:1100,m:1000,al:17.5,cda:.56,br:16,grip:.92,col:'#ff4d6d'},
+{n:'オメガプロト',rr:4,ps:1150,m:900,al:18,cda:.55,br:16.5,grip:.9,col:'#ff5e00'},
+{n:'ファントムGT',rr:4,ps:1100,m:1250,al:17,cda:.6,br:15.5,grip:.95,col:'#222a55'},
+{n:'ソニックスーパー',rr:4,ps:1150,m:1050,al:17.5,cda:.56,br:16,grip:.92,col:'#00ffa6'},
+{n:'レジェンド・アポロ',rr:5,ps:1200,m:850,al:19.5,cda:.54,br:18,grip:.95,col:'#7affff'},
+{n:'レジェンド・ゼウス',rr:5,ps:1200,m:950,al:19,cda:.55,br:17.5,grip:.98,col:'#ffffff'}];
+function accel(c,v,sl,dr,th,bo){const P=Math.min(MAXPS,c.ps)*735.5*.9*(bo?1.4:1);
+ return Math.min(c.al*(bo?1.2:1),P/(c.m*Math.max(v,3)))*th-(.5*1.2*c.cda*(dr?.75:1)*v*v+.012*c.m*9.8)/c.m-9.8*sl-(th?0:.5)}
+CARS.forEach(c=>{let v=0,t=0;c.t100=0;while(t<150){v+=accel(c,v,0,0,1)*.004;t+=.004;if(!c.t100&&v>=27.78)c.t100=t}c.vmax=v});
+/* ニュルブルクリンク北コース（コーナー順を再現した近似レイアウト）[長さm,曲率(+右),勾配%,名称] */
+const TR=[[500,0,-2,'スタート/ゴール'],[300,-1.1,-4,'ティアガルテン'],[260,2.0,-3,'ホーエンライン'],[450,-.8,-7,'ハッツェンバッハ'],[250,1.6,-5,'ハッツェンバッハ・ボーゲン'],[400,-.9,2,'ホッホアイヒェ'],[300,.7,5,'クイッデルバッハー・ヘーエ'],[300,0,8,'フルークプラッツ'],[300,.8,-8,'フルークプラッツ'],[350,-1.0,-4,'シュヴェーデンクロイツ'],[250,2.2,-8,'アレンベルク'],[600,.4,-9,'フックスレーレ'],[350,0,10,'フックスレーレ'],[500,-.6,3,'アデナウアー・フォルスト'],[350,1.4,2,'メッツゲスフェルト'],[400,-1.3,1,'カレンハルト'],[350,1.0,-3,'ミス・ヒット・ミス'],[500,-.7,-5,'ヴェールザイフェン'],[350,1.5,-3,'ブライトシャイト'],[300,-1.2,-2,'エックスミューレ'],[600,1.0,4,'ベルクヴェルク'],[500,-.5,-6,'ケッセルヒェン'],[600,0,-8,'クロスタータール'],[200,-3.2,-3,'カルーセル'],[500,.5,6,'ホーエ・アハト'],[800,.8,9,'ホーエ・アハト'],[500,-1.0,2,'ホーエ・アハト'],[400,1.2,-2,'ヴィッパーマン'],[400,-1.5,-6,'エシュバッハ'],[350,1.6,-4,'ブリュンヒェン'],[400,-1.1,-1,'アイスクルヴェ'],[500,.9,3,'プフランツガルテン'],[900,.3,7,'プフランツガルテン'],[300,-1.3,-3,'シュヴァルベンシュヴァンツ'],[300,1.8,2,'クライナー・カルーセル'],[600,-.7,1,'ガルゲンコプフ'],[700,0,8,'ガルゲンコプフ'],[2300,0,0,'デッティンガー・ヘーエ'],[900,.2,-1,'アントニウスブーヘ']];
+const COURSES=[
+{n:'ニュルブルクリンク 北コース',km:20.832,sc:0,th:{g:['#3f7d3a','#478a41'],tree:'#1f4d2a',mt:'#6b8aa8',k:'pine',a:[30,26,14],wf:1},t:TR},
+{n:'ニュルブルクリンク GPコース',km:5.148,sc:0,th:{g:['#4f9a46','#58a64e'],tree:'#2f7a35',mt:'#7a9bb8',k:'round',a:[36,20,10],ss:1,wf:1.1},t:[[700,0,0,'スタート/ゴール'],[260,1.9,-1,'ターン1'],[300,-1.2,-1,'フォード・クルヴェ'],[350,1.5,-2,'ドゥンロップ・ケーレ'],[260,-1.8,0,'シューマッハS'],[260,1.8,0,'シューマッハS'],[500,.3,1,'ラヴェノル・アリーナ'],[400,-1.1,2,'ビット・ケーレ'],[500,1.4,1,'ヴァルト・コーナー'],[600,0,0,'バックストレート'],[300,-2.4,-1,'ヘアピン'],[600,.5,0,'フィニッシュストレート']]},
+{n:'鈴鹿サーキット',km:5.807,sc:0,th:{g:['#3d8240','#468d49'],tree:'#f0a0c0',mt:'#6a8f9a',k:'round',a:[30,16,10],ss:2,wf:1,rb:['#e8e8e8','#2f5fd0']},t:[[700,0,0,'スタート/ゴール'],[300,1.7,-2,'ターン1'],[250,-1.2,-3,'S字カーブ'],[250,1.3,-2,'S字カーブ'],[250,-1.3,0,'S字カーブ'],[350,1.4,3,'ダンロップコーナー'],[350,-1.0,-3,'デグナーカーブ'],[200,2.2,0,'デグナーカーブ'],[400,0,2,'ヘアピン手前'],[220,-3,0,'ヘアピン'],[500,.6,1,'200Rカーブ'],[400,-1.8,0,'スプーンカーブ'],[300,1.6,0,'スプーンカーブ'],[900,0,-2,'バックストレート'],[300,.8,0,'130R'],[200,-2.2,0,'シケイン'],[200,2,0,'シケイン'],[400,0,0,'メインストレート']]},
+{n:'富士スピードウェイ',km:4.563,sc:0,th:{g:['#4b7f3a','#548a42'],tree:'#1d4a2a',mt:'#6f86a8',k:'pine',a:[24,14,8],peak:200,ss:3,wf:1.15,rb:['#e8e8e8','#1d4fa8']},t:[[1500,0,-1,'メインストレート'],[250,2.3,0,'TGRコーナー'],[500,-.6,-3,'コカ・コーラコーナー'],[400,.9,-3,'100R'],[300,-2.6,-1,'ヘアピン'],[350,1.2,3,'ダンロップコーナー'],[400,-1,4,'GRスープラコーナー'],[300,.8,0,'300Rコーナー'],[400,-1.3,-2,'パナソニックコーナー'],[300,1.8,0,'最終コーナー'],[300,0,-2,'ホームストレート']]},
+{n:'ベイエリア市街地コース',km:3.2,sc:1,th:{g:['#6c7480','#757e8a'],tree:'#2b3340',mt:'#2d7fb0',k:'bld',a:[14,1,1],ss:4,wf:.85,rb:['#f2c230','#14171c'],rd:['#3a3f48','#41464f']},t:[[500,0,0,'湾岸ストレート'],[150,2.6,0,'港湾コーナー'],[250,-1.5,0,'ビル街'],[180,2.8,0,'ヘアピン'],[300,0,2,'高架橋'],[250,-2,-2,'ジャンクション'],[300,1.2,0,'トンネル'],[200,-2.5,0,'ホテル前'],[250,1.6,0,'運河沿い'],[400,0,0,'ゴール直線']]},
+{n:'マウンテンパス',km:6.5,sc:0,th:{g:['#5b6a4a','#66765a'],tree:'#27502f',mt:'#8a9bb0',k:'spine',a:[60,38,20],ss:5,wf:.8,rb:['#cfcfcf','#7a7f88'],peak:150,sky:['#3a6ea5','#bcd6ee']},t:[[400,0,0,'麓スタート'],[200,2.8,6,'ヘアピン1'],[300,-1.4,8,'登り'],[220,3,6,'ヘアピン2'],[350,-.8,7,'ワインディング'],[220,-3,5,'ヘアピン3'],[300,1.2,8,'展望区間'],[240,3,3,'ヘアピン4'],[400,0,-2,'山頂'],[250,-2.6,-8,'下りヘアピン'],[350,1,-9,'ダウンヒル'],[220,-3,-7,'ヘアピン5'],[300,.8,-8,'ダウンヒル'],[400,0,-3,'麓ゴール']]},
+{n:'ハイウェイ・スイープ',km:8,sc:0,th:{g:['#c9a25a','#d2ab62'],tree:'#3f7f3a',mt:'#b0805a',k:'cactus',a:[40,18,10],ss:1,wf:1.25,rb:['#e8e8e8','#e07a1f'],sky:['#7fc3f0','#ffe9c4']},t:[[800,0,0,'スタート/ゴール'],[900,.45,0,'ロングスイープ1'],[700,-.5,1,'ロングスイープ2'],[1100,.35,-1,'高速ベンド'],[600,-.6,0,'スイープ3'],[1200,.4,1,'高速ベンド'],[700,-.45,0,'スイープ4'],[900,.3,-1,'ロングスイープ5'],[800,0,0,'ホームストレート']]},
+{n:'ヘアピン・ストリート',km:2.7,sc:0,th:{g:['#7a6a3a','#837243'],tree:'#d2501e',mt:'#8a7f8f',k:'round',a:[36,22,12],ss:2,wf:.85},t:[[500,0,0,'スタート/ゴール'],[160,3.3,0,'ヘアピン1'],[220,-1.5,0,'S字'],[160,-3.4,0,'ヘアピン2'],[200,2.2,0,'シケイン'],[150,-2.2,0,'シケイン'],[260,0,0,'短い直線'],[170,3.5,0,'ヘアピン3'],[180,-3,0,'ヘアピン4'],[230,2.5,0,'タイトターン'],[170,-3.4,0,'ヘアピン5'],[300,0,0,'ホームストレート']]},
+{n:'コースタル・ドライブ',km:7,sc:0,th:{g:['#d9c9a0','#e0d1aa'],tree:'#3f9a5a',mt:'#2d7fb0',k:'palm',a:[8,2,1],ss:1,wf:1.1,rb:['#ffffff','#2d9cdb'],sky:['#4fb3f0','#d6f0ff']},t:[[800,0,0,'海沿いストレート'],[300,1,0,'岩カーブ'],[500,.4,1,'オーシャンスイープ'],[200,-2.4,0,'ヘアピン'],[600,0,2,'丘の上'],[350,-1.2,-3,'下り'],[400,.8,0,'ビーチ沿い'],[250,2,0,'港の角'],[700,0,0,'ホームストレート']]},
+{n:'スノー・パス',km:5.5,sc:0,th:{g:['#e8eef5','#dde6ef'],tree:'#2a5a46',mt:'#aab8cc',k:'spine',a:[55,30,16],ss:5,wf:.9,peak:170,rb:['#e8e8e8','#2f5fd0'],sky:['#9fb6cf','#e6eef7']},t:[[500,0,0,'スタート'],[220,2.6,5,'雪のヘアピン'],[350,-1.2,6,'登り坂'],[220,-3,4,'ヘアピン2'],[400,.8,5,'尾根'],[300,-1.5,0,'頂上'],[260,2.8,-6,'下りヘアピン'],[400,-.9,-7,'ダウンヒル'],[220,-3.2,-5,'ヘアピン3'],[400,0,-2,'ゴール']]},
+{n:'キャニオン・ラン',km:6,sc:0,th:{g:['#b5653a','#be6d42'],tree:'#6b8e3a',mt:'#a14b2a',k:'cactus',a:[70,30,15],ss:3,wf:1.05,rb:['#f2e0c0','#c0502a'],sky:['#ff9a5c','#ffd9a8']},t:[[600,0,0,'谷底ストレート'],[300,1.4,2,'岩のカーブ'],[400,-.8,3,'キャニオンの壁'],[250,2.4,1,'ブラインドコーナー'],[500,0,-2,'ロングダウンヒル'],[350,-1.6,-3,'スイッチバック'],[300,1.8,0,'谷の出口'],[300,-2.6,0,'ヘアピン'],[500,.5,2,'メサの上'],[400,0,0,'ホームストレート']]},
+{n:'フォレスト・ステージ',km:4,sc:0,th:{g:['#2f5a2a','#376630'],tree:'#143d1e',mt:'#4a6a5a',k:'pine',a:[20,10,6],ss:5,wf:.75,rb:['#6b4a2a','#4a3220']},t:[[400,0,0,'林道入口'],[180,2.4,3,'木々の間'],[240,-1.8,4,'丸太のS字'],[180,2.8,2,'ヘアピン'],[300,-1,-3,'下り'],[160,-3,-2,'タイトコーナー'],[260,1.4,0,'小川沿い'],[200,-2.2,3,'登り返し'],[300,0,0,'林道出口']]},
+{n:'ネオン・シティ・ループ',km:4.5,sc:1,th:{g:['#444b5a','#4c5466'],tree:'#2b3340',mt:'#1a3a6a',k:'bld',a:[10,1,1],ss:4,wf:.9,rb:['#ff3d9a','#14171c'],rd:['#2f333c','#363a44']},t:[[600,0,0,'ネオン大通り'],[180,2.8,0,'交差点'],[300,-1.4,0,'ダウンタウン'],[200,2.5,1,'立体駐車場'],[260,-2.6,-1,'ジャンクション'],[400,0,0,'ベイブリッジ'],[200,2.2,0,'埠頭'],[250,-1.8,0,'ネオン街'],[500,0,0,'ゴール直線']]},
+{n:'GP1 ポート・ストリート',km:3.8,sc:1,gp:1,th:{g:['#6c7480','#757e8a'],tree:'#2b3340',mt:'#2d7fb0',k:'bld',a:[14,1,1],ss:4,wf:.9,rb:['#f2c230','#14171c'],rd:['#3a3f48','#41464f']},t:[[600,0,0,'ポート・ストレート'],[200,2.2,0,'コンテナ前'],[260,-1.4,0,'倉庫街'],[180,2.6,1,'クレーン・コーナー'],[300,0,2,'ブリッジ'],[220,-2.4,-2,'フェリー乗り場'],[300,1,0,'岸壁'],[200,-2.8,0,'ヘアピン'],[400,.4,0,'ウォーターフロント'],[500,0,0,'ゴール直線']]},
+{n:'GP2 ハイランド・パーク',km:5.2,sc:0,gp:1,th:{g:['#4f9a46','#58a64e'],tree:'#2f7a35',mt:'#7a9bb8',k:'round',a:[36,20,10],ss:2,wf:1.05},t:[[700,0,0,'パーク・ストレート'],[350,.9,1,'ガーデンカーブ'],[450,-.7,2,'丘の道'],[280,1.8,0,'池のほとり'],[220,-2.2,-3,'下りシケイン'],[220,2,-2,'下りシケイン'],[500,-.5,0,'並木道'],[300,1.6,2,'登りコーナー'],[250,-2,3,'展望台ヘアピン'],[600,.3,-2,'ダウンヒル'],[400,0,0,'ゴール直線']]},
+{n:'GP3 サンライズ・スピードウェイ',km:4.4,sc:0,gp:1,th:{g:['#d9c9a0','#e0d1aa'],tree:'#3f9a5a',mt:'#2d7fb0',k:'palm',a:[8,2,1],ss:1,wf:1.25,rb:['#ffffff','#ff5a36']},t:[[900,0,0,'サンライズ・ストレート'],[700,.5,0,'ロングバンク1'],[500,0,0,'バックストレート'],[700,.5,0,'ロングバンク2'],[260,-1.8,0,'シケイン'],[260,1.8,0,'シケイン'],[600,0,0,'ゴール直線']]},
+{n:'GP4 ミッドナイト・ベイ',km:5,sc:1,gp:1,th:{g:['#444b5a','#4c5466'],tree:'#2b3340',mt:'#1a3a6a',k:'bld',a:[10,1,1],ss:4,wf:.85,rb:['#ff3d9a','#14171c'],rd:['#2f333c','#363a44']},t:[[500,0,0,'ネオン・ストレート'],[150,2.4,0,'スクランブル交差点'],[200,-2,0,'ネオン街'],[160,2.6,0,'ガード下'],[260,-1.6,0,'ベイ・シケイン'],[260,1.8,0,'ベイ・シケイン'],[300,0,0,'湾岸道路'],[200,-2.6,0,'ターミナル'],[220,2.2,0,'ホテル街'],[260,-1.4,0,'埠頭'],[500,0,0,'ゴール直線']]},
+{n:'GP5 グランドファイナル・リング',km:9,sc:0,gp:1,th:{g:['#2f5a2a','#376630'],tree:'#143d1e',mt:'#4a6a5a',k:'spine',a:[60,38,20],ss:5,wf:.85,peak:150,rb:['#cfcfcf','#7a7f88']},t:[[600,0,0,'ファイナル・ストレート'],[300,1.2,3,'登りコーナー'],[500,-.8,5,'ヒルクライム'],[250,2.4,4,'ヘアピン1'],[400,-1,3,'尾根道'],[300,1.6,0,'山頂'],[300,-2.2,-4,'下りコーナー'],[500,.6,-6,'ダウンヒル'],[220,-3,-5,'ヘアピン2'],[450,1.2,-3,'湖畔'],[300,-1.8,0,'ラストシケイン'],[600,0,0,'ゴール直線']]},
+{n:'GPF グランドスタジアム・サーキット',km:6.4,sc:0,gp:1,th:{g:['#2b3a2b','#314431'],tree:'#10301a',mt:'#1a2a4a',k:'round',a:[18,8,5],ss:1,wf:1.15,rb:['#ffd23f','#14171c']},t:[[800,0,0,'スタジアム・ストレート'],[260,2.2,0,'ターン1'],[300,-1.3,0,'ホテル前'],[260,2,0,'ターン3'],[260,-2.2,1,'ヘアピン'],[450,.6,2,'バックストレート'],[280,-1.8,0,'ハイスピード・ベンド'],[300,1.6,-2,'下りシケイン'],[300,-1.6,-2,'下りシケイン'],[400,0,0,'ホームストレート']]}];
+let crsI=0,CRS=COURSES[0];
+let cv=[],gd=[],hh=[],nm=[],L=1;
+function buildTrack(TRK,km){cv=[];gd=[];nm=[];const SC=km*1000/TRK.reduce((a,s)=>a+s[0],0);
+ TRK.forEach(([m,c,gr,n])=>{const k=Math.round(m*SC/SEGM);for(let i=0;i<k;i++){cv.push(c*CF);gd.push(gr);nm.push(n)}});
+ const sm=a=>{for(let p=0;p<12;p++)a=a.map((v,i)=>(a[(i+a.length-1)%a.length]+v+a[(i+1)%a.length])/3);return a};
+ cv=sm(cv);gd=sm(gd);L=cv.length;WD=sm(cv.map((c,i)=>{const wf=CRS.th.wf||1,ac=Math.abs(c)/CF,ag=Math.abs(gd[i]);let w=wf*(1-Math.min(.3,ag*.03)-(ac>2.4?.1:0));if(ac<.25&&ag<1)w=wf*1.12;return Math.max(.6,Math.min(1.25,w))}));hh=[0];for(let i=0;i<L;i++)hh.push(hh[i]+gd[i]/100*SEGM/8);
+ const e=hh[L];hh=hh.map((v,i)=>v-e*i/L);gd=gd.map((v,i)=>(hh[i+1]-hh[i])*8/SEGM*100);mkSD();mkMap()}
+const TODS=[{sky:['#5aa8e8','#d8efff'],g:['#3f7d3a','#478a41'],rd:['#5a5f68','#62676f'],fog:'216,239,255',mt:'#6b8aa8',tree:'#1f4d2a'},
+{sky:['#1c2f55','#f0905a'],g:['#25402c','#2d4a33'],rd:['#474d58','#4f5661'],fog:'240,144,90',mt:'#2a2f4a',tree:'#14301c'},
+{sky:['#04060f','#1b2a52'],g:['#0d1a12','#11201a'],rd:['#262a33','#2b303a'],fog:'27,42,82',mt:'#0b1020',tree:'#07130c'}];
+let SD=[],MP=[],CF=1,WD=[];function mkSD(){SD=new Array(L).fill(0);for(let k=0;k<14;k++){const s0=Math.floor(k*L/14+(k?((k*7919)%400):0)),ln=k?70:120;for(let i=0;i<ln;i++)SD[(s0+i)%L]=(k===0?3:(k%2?1:2))}}
+buildTrack(CRS.t,CRS.km);
+const MSG='ニュルブルクリンク北コース（全長約20.8km）。Esc で設定・ポーズ。操作アシスト「かんたん」はアクセル自動＋コーナー自動減速。ライバルの真後ろに付くとスリップストリームで空気抵抗が減ります。';
+let car=CARS[2],TOD=TODS[0],st='menu',z=0,x=0,v=0,lap=0,t=0,lt=0,laps=[],cd=0,bg=0,dist=0,dr=0,pos=5,R=[],LAPS=1,RW=1.5,WX=0,PR=false,GPM=false,FIN=false,GPR=[],EV=null,ONL=false,XMSG='',RM=null,PEERS=[],myStart=0,LOBBY=false,MYPEER='',lastNet=0,ST=0,ot=0,cc=0,pp=99,PK=[],toast2='',tc2=0,nit=.5,bst=0,secA=0,secT=0,sb=[0,0,0],toast='',tc=0,DF=1,vol=.6,ctx=null,mg=null,eng=null,eg=null,prev='menu',lastHit=0,t100=0,sT=-1;
+const K={l:0,r:0,g:0,b:0,n:0};
+const map={ArrowLeft:'l',a:'l',A:'l',ArrowRight:'r',d:'r',D:'r',ArrowUp:'g',w:'g',W:'g',ArrowDown:'b',s:'b',S:'b',' ':'b',Shift:'n',n:'n',N:'n'};
+addEventListener('keydown',e=>{if(st==='intro'&&(e.key==='Enter'||e.key===' ')){introSkip=true;e.preventDefault();return}if(e.key==='Escape'){if(st==='race'||st==='count'||st==='pause')tp();return}if(map[e.key]){K[map[e.key]]=1;e.preventDefault()}});
+addEventListener('keyup',e=>{if(map[e.key])K[map[e.key]]=0});
+document.querySelectorAll('#pad button').forEach(b=>{const k=b.dataset.k;b.onpointerdown=()=>K[k]=1;b.onpointerup=b.onpointerleave=b.onpointercancel=()=>K[k]=0});
+const ov=$('ov'),ps=$('ps');
+const fmt=s=>{const m=Math.floor(s/60);return m+':'+(s%60).toFixed(2).padStart(5,'0')};
+function bl(){try{const o=+localStorage.getItem('nbl'+(crsI||''));return o?'　ベストラップ '+fmt(o):''}catch(e){return ''}}
+function menuOld(title,msg){cs.innerHTML='';
+ CARS.forEach(c=>{const b=document.createElement('button');b.innerHTML='<b>'+c.n+'</b><span>'+Math.min(MAXPS,c.ps)+'PS ・ 0-100km/h '+c.t100.toFixed(2)+'秒</span><span>最高速 '+Math.round(c.vmax*3.6)+'km/h</span>';b.onclick=()=>start(c);cs.appendChild(b)});
+ ov.style.display='flex';st='menu'}
+function start(c,pr){PR=!!pr;car=tune(c.base||c);z=0;x=0;v=0;lap=0;t=0;lt=0;laps=[];cd=4.8;st=FIN?'intro':'count';introT=0;introSkip=false;ov.style.display='none';LAPS=PR?999:EV?EV.laps:ONL?1:+$('lp').value*Math.max(1,Math.round(15/CRS.km));RW=+$('ln').value/2;CF=+$('cvf').value;buildTrack(CRS.t,CRS.km);DF=EV?EV.df:+$('df').value;TOD=mkTod();WX=EV?EV.wx:ONL?0:+$('wx').value;aud();dist=0;pos=5;t100=0;sT=-1;nit=.5;bst=0;bg=0;ot=0;cc=0;pp=99;tc2=0;mkPK();secA=0;secT=0;sb=[0,0,0];tc=0;
+ {const nr=PR?0:ONL?PEERS.length-1:EV?EV.rv:+$('rv').value,ln=RW*2,tot=nr+1,rows=Math.ceil(tot/ln),sl=Array.from({length:tot},(_,k)=>({d:(rows-1-Math.floor(k/ln))*6+(k%ln)*1.5,x:((k%ln)+.5)/ln*2-1}));for(let a=sl.length-1;a>0&&!ONL;a--){const b=Math.floor(Math.random()*(a+1));[sl[a],sl[b]]=[sl[b],sl[a]]}const mi=ONL?PEERS.map(p=>p.peer).sort().indexOf(MYPEER):sl.length-1,me=sl.splice(Math.max(0,mi),1)[0],oth=PEERS.map(p=>p.peer).sort().filter(id=>id!==MYPEER);myStart=me.d;x=nr?me.x:0;R=sl.map((s,i)=>{return{net:ONL,peer:ONL?oth[i]:0,d:s.d-me.d,x:s.x,tx:s.x,sp:0,bt:BTL[Math.floor(Math.random()*BTL.length)],vr:Math.floor(Math.random()*99),k:(GPM?.95+Math.random()*.08:.86+Math.random()*.08)*DF,col:['#e8e8e8','#7bd06b','#b56bff','#ff9ec4','#ff8a3c','#3fd0e0','#e0d040','#d0402f','#9aa0ff'][i%9]}});if(GPM)R.forEach((r,i)=>Object.assign(r,{gid:i},GPR[i],{k:FIN?GPR[i].k:Math.max(GPR[i].k,1.05)+(S.gps?S.gps.round*.012:0)}));if(FIN)introList=R.map(r=>({n:r.nick,ci:r.ci,col:r.col,bt:r.bt,vr:r.vr})).concat([{n:S.nick,ci:CARS.indexOf(car.base),col:car.col,bt:car.bt,vr:car.vr,me:1}])}}
+function secDone(k){const d=lt-secT;toast='S'+(k+1)+'  '+fmt(d)+(sb[k]?'  ('+(d<sb[k]?'-':'+')+Math.abs(d-sb[k]).toFixed(2)+')':'');if(!sb[k]||d<sb[k])sb[k]=d;tc=4;secT=lt}
+const GG=g;
+const CD={
+coupe:{wh:[-88,18,28,26],body:[[-90,26],[-80,-6],[-48,-22],[48,-22],[80,-6],[90,26]],win:[[-44,-18],[44,-18],[54,-4],[-54,-4]],tl:[-82,6,36,10],ex:2,sp:[[-70,-30,140,6],[-62,-26,6,10],[56,-26,6,10]]},
+hatch:{wh:[-80,16,24,28],body:[[-80,28],[-76,0],[-62,-20],[-46,-30],[46,-30],[62,-20],[76,0],[80,28]],win:[[-46,-26],[46,-26],[58,-6],[-58,-6]],tl:[-78,2,12,24],ex:1,sp:[[-52,-34,104,5]]},
+sedan:{wh:[-82,18,26,26],body:[[-88,28],[-86,2],[-72,-8],[-54,-10],[-44,-28],[44,-28],[54,-10],[72,-8],[86,2],[88,28]],win:[[-40,-24],[40,-24],[50,-12],[-50,-12]],tl:[-84,4,30,8],ex:2,sp:null},
+suv:{wh:[-84,14,28,32],body:[[-86,30],[-86,-18],[-76,-32],[76,-32],[86,-18],[86,30]],win:[[-62,-28],[62,-28],[66,-6],[-66,-6]],tl:[-84,-2,10,30],ex:1,sp:[[-70,-38,140,4]]},
+van:{wh:[-78,16,26,30],body:[[-80,30],[-80,-36],[-70,-46],[70,-46],[80,-36],[80,30]],win:[[-60,-40],[60,-40],[62,-14],[-62,-14]],tl:[-80,-8,8,34],ex:1,sp:null},
+pickup:{wh:[-84,16,28,30],body:[[-86,30],[-86,-6],[-52,-6],[-44,-30],[44,-30],[52,-6],[86,-6],[86,30]],win:[[-38,-26],[38,-26],[46,-10],[-46,-10]],tl:[-84,2,10,18],ex:1,sp:null},
+wedge:{wh:[-92,14,32,32],body:[[-96,30],[-92,12],[-72,-4],[-40,-12],[40,-12],[72,-4],[92,12],[96,30]],win:[[-36,-10],[36,-10],[46,0],[-46,0]],tl:[-86,10,40,6],ex:2,sp:[[-84,-26,168,5],[-80,-22,5,14],[75,-22,5,14]]},
+proto:{wh:[-92,14,30,32],body:[[-70,30],[-64,2],[-34,-14],[34,-14],[64,2],[70,30]],win:[[-18,-12],[18,-12],[24,0],[-24,0]],tl:[-60,8,20,8],ex:2,sp:[[-98,-30,196,5],[-4,-40,8,26],[-98,-34,4,14],[94,-34,4,14]]},
+muscle:{wh:[-90,16,30,28],body:[[-92,28],[-92,-2],[-82,-10],[-64,-14],[-52,-26],[52,-26],[64,-14],[82,-10],[92,-2],[92,28]],win:[[-46,-22],[46,-22],[56,-14],[-56,-14]],tl:[-90,2,44,12],ex:2,sp:[[-60,-30,120,5]]},
+roadster:{wh:[-84,18,26,26],body:[[-86,28],[-82,2],[-62,-8],[62,-8],[82,2],[86,28]],win:[[-40,-8],[40,-8],[40,-2],[-40,-2]],tl:[-82,6,30,9],ex:2,sp:[[-34,-20,12,12],[22,-20,12,12]]}};
+const BTL=Object.keys(CD),BTM={'コンパクト':'hatch','ホットハッチ':'hatch','ラグジュアリーセダン':'sedan','ラリーターボ':'hatch','スポーツクーペ':'coupe','マッスルV8':'muscle','ミッドシップ':'wedge','GTスーパー':'coupe','ハイパーカー':'wedge','レーシングプロト':'proto','ミニバン':'van','オープンスポーツ':'roadster','SUV':'suv','ピックアップ':'pickup','ホットセダン':'sedan','ライトウェイト':'roadster','ターボクーペ':'coupe','AWDスーパー':'wedge','ハイブリッドGT':'coupe','ジェットカー':'proto','ゴールデンGT':'wedge','ミニクーペ':'hatch','ステーションワゴン':'hatch','ホットミニバン':'van','クラシックロードスター':'roadster','ツーリングセダン':'sedan','オフロードSUV':'suv','ホットピックアップ':'pickup','ドリフトクーペ':'coupe','グランドツアラー':'muscle','ライトウェイトRS':'roadster','ターボスーパー':'wedge','ハイブリッドスーパー':'wedge','ステルスプロト':'proto','サンダーGT':'coupe','ネオンスペシャル':'wedge','ゴーストレーサー':'proto','ベーシックセダン':'sedan','シティコミューター':'hatch','ワークスバン':'van','ミニトラック':'pickup','ホットクーペR':'coupe','ラリースペシャル':'hatch','ハイウェイクルーザー':'sedan','スポーツワゴンRS':'hatch','エクストリームGT':'coupe','サーキットスペシャル':'roadster','ツインターボR':'muscle','アルティメットSUV':'suv','プロトタイプX':'proto','ストームGT':'coupe','クリムゾンスーパー':'wedge','ヴァルキリー':'wedge','オメガプロト':'proto','ファントムGT':'coupe','ソニックスーパー':'wedge','レジェンド・アポロ':'proto','レジェンド・ゼウス':'wedge'};
+CARS.forEach(c=>{c.bt=BTM[c.n]||'coupe';c.vr=[...c.n].reduce((a,ch)=>a+ch.charCodeAt(0),0)});
+function drawC(px,py,sc,col,brk,rot,bt,vr,g2){const g=g2||GG,d=CD[bt]||CD.coupe;vr=vr||0;
+ const poly=(pts,f)=>{g.fillStyle=f;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.fill()},rc=(x,y,w,h,f)=>{g.fillStyle=f;g.fillRect(x,y,w,h)};
+ g.save();g.translate(px,py);g.scale(sc*(1+((vr%7)-3)*.02),sc*(1+((vr%5)-2)*.025));g.rotate(rot);
+ rc(-96,34,192,10,'rgba(0,0,0,.45)');
+ const [wx,wy,ww,wh]=d.wh;rc(wx,wy,ww,wh,'#14171c');rc(-wx-ww,wy,ww,wh,'#14171c');
+ poly(d.body,col);
+ if(sc>.25){const gg=g.createLinearGradient(0,-46,0,30);gg.addColorStop(0,'rgba(255,255,255,.28)');gg.addColorStop(.5,'rgba(255,255,255,0)');gg.addColorStop(1,'rgba(0,0,0,.35)');poly(d.body,gg)}
+ if(vr%3===0){const ty=Math.min(...d.body.map(p=>p[1]));rc(-9,ty,6,28-ty,'rgba(255,255,255,.6)');rc(3,ty,6,28-ty,'rgba(255,255,255,.6)')}
+ poly(d.win,'#0c1118');
+ const [tx,ty2,tw,th]=d.tl,tc=brk?'#ff2a2a':'#a01818';rc(tx,ty2,tw,th,tc);rc(-tx-tw,ty2,tw,th,tc);
+ rc(-60,24,120,10,'#14171c');rc(-14,10,28,9,'#e8e8e8');rc(-60,21,120,3,['#ff5a36','#2f9bff','#f2c230','#eef2f6','#7bd06b','#ff9ec4'][vr%6]);{const ty0=Math.min(...d.body.map(p=>p[1])),mx=Math.abs(d.body[0][0]);if(vr%4===1)rc(-10,ty0-7,20,8,'#14171c');if(vr%5===2){rc(-mx-8,-6,9,7,col);rc(mx-1,-6,9,7,col)}if(vr%7===4)rc(-3,ty0-14,3,14,'#14171c')}
+ g.fillStyle='#666';(d.ex===1?[0]:[-30,30]).forEach(e=>{g.beginPath();g.arc(e,30,5,0,6.3);g.fill()});
+ if(d.sp)d.sp.forEach(s=>rc(s[0],s[1],s[2],s[3],'#14171c'));
+ if(brk){g.fillStyle='rgba(255,40,40,.3)';g.fillRect(tx-6,ty2-6,tw+12,th+12);g.fillRect(-tx-tw-6,ty2-6,tw+12,th+12)}
+ g.restore()}
+function mkPK(){PK=[];return;for(let k=30;k<L-30;k+=55){const lx=(Math.floor(Math.random()*(RW*2))+.5)/(RW*2)*2-1;for(let j=0;j<3;j++)PK.push({s:k+j*6,x:lx,got:false})}}
+function drawPK(P,pct){PK.forEach(c=>{if(c.got)return;const q=((c.s-z)%L+L)%L;if(q<.3||q+pct>=N-2)return;const f=q+pct,n=Math.floor(f),a=P[n],b=P[n+1],k=f-n,y=a.y+(b.y-a.y)*k,w=a.w+(b.w-a.w)*k,cx=a.cx+(b.cx-a.cx)*k+c.x*(a.rw+(b.rw-a.rw)*k)*w,r=w*.06;g.fillStyle='#b8860b';g.beginPath();g.arc(cx,y-w*.1,r+1,0,6.3);g.fill();g.fillStyle='#ffd23f';g.beginPath();g.arc(cx,y-w*.1,r,0,6.3);g.fill();g.fillStyle='#fff3b0';g.fillRect(cx-r*.15,y-w*.1-r*.6,r*.3,r*1.2)})}
+function rel(r){const q=((r.d-dist)%L+L)%L;return q>L/2?q-L:q}
+function update(dt){
+ if(st==='menu'){v=45;z=((z+v/SEGM*dt)%L+L)%L;bg-=cv[Math.floor(z)%L]*dt*30;x=Math.sin(performance.now()/2500)*.5;return}
+ if(st==='intro'){introT+=dt;if(introSkip||introT>=STG+introList.length*1.8){st='count';cd=4.8}return}
+ if(st==='count'){const c0=Math.floor((4.8-cd)/.7);cd-=dt;if(Math.floor((4.8-cd)/.7)!==c0&&c0<5)beep(440,.2);if(cd<=0){st='race';beep(880,.5)}return}
+ if(st==='done'){v=Math.max(0,v-30*dt);z=(z+v/SEGM*dt)%L;return}
+ if(st!=='race')return;
+ t+=dt;lt+=dt;const s=Math.floor(z)%L,kmh=v*3.6,sl=gd[s]/100;
+ const A=+$('asi').value,th=(K.g||A===2)&&!K.b?1:0;if(th&&sT<0)sT=t;
+ const bo=K.n&&nit>0;if(bo){if(!bst)beep(300,.4);nit=Math.max(0,nit-.3*dt);bst=1}else{bst=0;nit=Math.min(1,nit+.02*dt)}tc=Math.max(0,tc-dt);
+ v+=accel(car,v,sl,dr,(th||bo)?1:0,bo)*dt;
+ if(K.b)v-=car.br*dt*[1,.75,.9][WX];if(A===2){let mc=0;const la=10+Math.floor(v*.8);for(let i=0;i<la;i+=3)mc=Math.max(mc,Math.abs(cv[(s+i)%L]));if(kmh>250*Math.sqrt(2.2/Math.max(mc,.4)))v-=car.br*.5*dt}
+ if(Math.abs(x)>1.05&&v>car.vmax*.35)v-=(A===2?5:16)*dt;
+ v=Math.max(0,v);
+ if(!t100&&sT>=0&&v*3.6>=100)t100=t-sT;
+ const sT2=(K.r?1:0)-(K.l?1:0);ST+=(sT2-ST)*Math.min(1,dt*9);const sI=ST;x+=sI*dt*2.6*car.grip*(A===2?1.5:1)*Math.min(1,v/15)*(1-.3*Math.min(1,kmh/400))*[1,.8,.92][WX];
+ x-=cv[s]*dt*(kmh/250)**2*1.1*(A===2?.04:A===1?.1:.3)*[1,1.25,1.1][WX];
+ x=Math.max(-2.2,Math.min(2.2,x));
+ bg-=cv[s]*(v/car.vmax)*dt*40;
+ z+=v/SEGM*dt;dist+=v/SEGM*dt;dr=0;{const sc=Math.min(2,Math.floor(z/(L/3)));if(sc>secA){secDone(secA);secA=sc}}
+ R.forEach(r=>{const q=rel(r),c=Math.abs(cv[((Math.floor(r.d)%L)+L)%L]);if(r.net)netUp(r,dt);else{let tg=(GPM?car:car.base).vmax*r.k*(1-c*.09);tg*=q>80?.95:q<-80?1.05:1;
+  r.sp+=Math.max(-12*dt,Math.min(tg-r.sp,accel(GPM?car:car.base,r.sp,0,0,1)*dt));r.d+=r.sp/SEGM*dt;r.x+=(r.tx-r.x)*dt;if(Math.random()<dt*.5)r.tx=Math.random()*1.4-.7;}
+  if(t>3&&q>0&&q<1.3&&Math.abs(x-r.x)<.4/RW){if(performance.now()-lastHit>300){beep(80,.2);lastHit=performance.now()}if(v>r.sp)v=r.sp*.97;x+=(x>r.x?1:-1)*.012}
+  if(q>3&&q<20&&Math.abs(x-r.x)<.45/RW)dr=1;if(q>0&&q<12&&Math.abs(x-r.x)<.3/RW)r.tx=r.x>x?Math.min(.85,r.x+.35):Math.max(-.85,r.x-.35)});
+ pos=1+R.filter(r=>r.d>dist).length;if(dr)nit=Math.min(1,nit+.12*dt);if(ONL&&RM&&performance.now()-lastNet>90){lastNet=performance.now();RM.presence({d:dist+myStart,x:+x.toFixed(3),sp:+v.toFixed(1)}).catch(()=>{})}
+ PK.forEach(c=>{if(c.got)return;const q=((c.s-z)%L+L)%L;if(q<.9&&Math.abs(x-c.x)<.4/RW){c.got=true;cc++;nit=Math.min(1,nit+.03);beep(1300,.06)}});
+ if(pos<pp&&pp<99){ot++;nit=Math.min(1,nit+.25);beep(1000,.12);toast2='OVERTAKE！ +15 Cr';tc2=2}pp=pos;tc2=Math.max(0,tc2-dt);
+ if(z>=L){secDone(2);secA=0;secT=0;z-=L;laps.push(lt);lt=0;lap++;beep(880,.3);PK.forEach(c=>c.got=false);if(PR){try{const o=+localStorage.getItem('nbl'+(crsI||'')),b2=laps[laps.length-1];if(!o||b2<o)localStorage.setItem('nbl'+(crsI||''),b2)}catch(e){}}if(lap>=LAPS){st='done';const best=Math.min(...laps);XMSG=GPM?(FIN?finFinish():gpFinish()):'';const rec=recOf(best),sb=SPON[S.sp]?SPON[S.sp].f(pos,ot,rec):0,evb=evReward(),pr=(PRIZE[pos-1]||100)+ot*15+sb+evb.c;S.coins+=pr;if(ONL&&RM)RM.presence({ready:false}).catch(()=>{});const lv0=lvOf();S.xp=(S.xp||0)+Math.max(30,100+(6-pos)*60);lvRew(lv0,lvOf());S.races=(S.races||0)+1;if(pos===1)S.wins=(S.wins||0)+1;sv();try{const o=+localStorage.getItem('nbl'+(crsI||''));if(!o||best<o)localStorage.setItem('nbl'+(crsI||''),best)}catch(e){}
+  setTimeout(()=>(GPM?gpScreen:menu)('フィニッシュ！ '+pos+'位 / '+fmt(laps.reduce((a,b)=>a+b,0)),'ラップ: '+laps.map(fmt).join(' / ')+'　ベスト '+fmt(best)+'　獲得 '+pr+'コイン（追い抜き'+ot+'回'+(sb?'・スポンサー'+sb:'')+(evb.c?'・特別戦'+evb.c:'')+'）'+XMSG),1800)}}
+}
+function draw(){const sh=st==='race'?Math.min(1,v/90)*1.5:0;g.save();g.translate(Math.sin(performance.now()*.011)*sh*.6,Math.cos(performance.now()*.013)*sh*.6);
+ const sky=g.createLinearGradient(0,0,0,HOR);sky.addColorStop(0,TOD.sky[0]);sky.addColorStop(1,TOD.sky[1]);
+ g.fillStyle=sky;g.fillRect(0,0,W,HOR);
+ g.fillStyle=TOD.mt;g.beginPath();g.moveTo(0,HOR);
+ for(let i=0;i<=W;i+=20)g.lineTo(i,HOR-CRS.th.a[0]-CRS.th.a[1]*Math.sin((i+bg)*.011)-CRS.th.a[2]*Math.sin((i+bg)*.031));
+ g.lineTo(W,HOR);g.fill();
+ if(CRS.th.peak){const pw=W+500,px=(((W*.35+bg*.08)%pw)+pw)%pw-250,ph=CRS.th.peak;g.fillStyle=TOD.mt;g.beginPath();g.moveTo(px-300,HOR);g.lineTo(px,HOR-ph);g.lineTo(px+300,HOR);g.fill();g.fillStyle=TOD.night?'#9aa4c0':'#f4f6fa';g.beginPath();g.moveTo(px-105,HOR-ph*.65);g.lineTo(px,HOR-ph);g.lineTo(px+105,HOR-ph*.65);g.lineTo(px+50,HOR-ph*.7);g.lineTo(px,HOR-ph*.62);g.lineTo(px-50,HOR-ph*.7);g.fill()}
+ if(!TOD.night){const sx=((W*.78+bg*.05)%W+W)%W,sg=g.createRadialGradient(sx,HOR-100,4,sx,HOR-100,70);sg.addColorStop(0,'rgba(255,245,210,.95)');sg.addColorStop(1,'rgba(255,245,210,0)');g.fillStyle=sg;g.fillRect(sx-70,HOR-170,140,140)}
+ g.fillStyle='rgba(255,255,255,.22)';for(let i=0;i<5;i++){const c2=((i*230+bg*.2)%1100+1100)%1100-70,y2=36+(i*37)%70;g.beginPath();g.ellipse(c2,y2,70,13,0,0,6.3);g.fill()}
+ if(WX){g.fillStyle=WX===1?'rgba(60,70,85,.55)':'rgba(200,205,210,.6)';g.fillRect(0,0,W,HOR)}
+ g.fillStyle=TOD.g[0];g.fillRect(0,HOR,W,H-HOR);
+ const base=Math.floor(z),pct=z-base,P=[],hc=hh[base]+(hh[base+1]-hh[base])*pct,RWp=RW*(WD[base]+(WD[(base+1)%L]-WD[base])*pct);
+ let xa=0,dx=-cv[base%L]*pct*.0006;
+ for(let n=0;n<N;n++){const s=(base+n)%L,sc=1.5/(n-pct+1.5),w=W*.38*sc;
+  P.push({y:HOR+(H-HOR)*sc*(1+hc-hh[s]),w,cx:W/2+(xa-x*RWp)*w,s,rw:RW*WD[s]});xa+=dx;dx+=cv[s]*.0006}
+ for(let n=N-2;n>=0;n--){const a=P[n],b=P[n+1];if(b.y>=a.y)continue;
+  const band=Math.floor(a.s/4)%2,fog=Math.min(1,n/N),RWl=a.rw;
+  g.fillStyle=band?TOD.g[0]:TOD.g[1];g.fillRect(0,b.y,W,a.y-b.y+1);
+  quad(a,b,RWl+.14,CRS.th.rb?(band?CRS.th.rb[0]:CRS.th.rb[1]):(band?'#e8e8e8':'#d6342a'));
+  quad(a,b,RWl,band?TOD.rd[0]:TOD.rd[1]);
+  if(n<70)for(let i=0;i<RW*2;i++){const c=((i+.5)/RW-1)*RWl;quad(a,b,.07,'rgba(0,0,0,.1)',c-.25);quad(a,b,.07,'rgba(0,0,0,.1)',c+.25)}if(WX===1&&(a.s&1))quad(a,b,RWl,'rgba(200,220,255,.06)');
+  if(a.s<3||a.s>L-3)quad(a,b,RWl,'#f4f4f4');
+  if(!band)for(let i=1;i<RW*2;i++)quad(a,b,.03,'#e9e3c9',(i/RW-1)*RWl);
+  const rh=a.w*.14,rw=a.w*.05+1;g.fillStyle=(a.s>>3)%2?'#d6342a':'#e8e8e8';g.fillRect(a.cx-a.w*(RWl+.25),a.y-rh,rw,rh);g.fillRect(a.cx+a.w*(RWl+.25),a.y-rh,rw,rh);
+  const cc=cv[a.s];if(Math.abs(cc)>1.3&&a.s%6===0){const dir=cc>0?1:-1,bw=a.w*.35,bx=a.cx-dir*a.w*(RWl+.8);g.fillStyle='#f2c230';g.fillRect(bx-bw/2,a.y-bw*2.2,bw,bw*1.4);g.strokeStyle='#14171c';g.lineWidth=Math.max(1,bw*.12);g.beginPath();g.moveTo(bx-dir*bw*.2,a.y-bw*2.05);g.lineTo(bx+dir*bw*.25,a.y-bw*1.5);g.lineTo(bx-dir*bw*.2,a.y-bw*.95);g.stroke();g.fillStyle='#14171c';g.fillRect(bx-1,a.y-bw*.8,2+bw*.04,bw*.8)}
+  if(a.s%8===0){const pw=a.w*.05+1;g.fillStyle='#c9ced6';g.fillRect(a.cx-a.w*(RWl+.3),a.y-pw*5,pw,pw*5);g.fillRect(a.cx+a.w*(RWl+.3),a.y-pw*5,pw,pw*5)}
+  const sdv=SD[a.s];if(sdv)stand(a,sdv);else if(a.s%4===0){const h=(a.s*2654435761>>>0)%1000/1000,sd=a.s%8?1:-1;tree(a.cx+sd*a.w*(RWl+.6+h*1.4),a.y,a.w*.6)}
+  const fo=WX===2?.1:WX===1?.25:.4;if(fog>fo){g.fillStyle='rgba('+TOD.fog+','+(fog-fo)*(WX===2?1.1:.5)+')';g.fillRect(0,b.y,W,a.y-b.y+1)}
+ }
+ drawRivals(P,pct);drawPK(P,pct);if(bst){g.strokeStyle='rgba(180,230,255,.5)';g.lineWidth=2;for(let i=0;i<18;i++){const a=Math.random()*6.28,r1=200+Math.random()*100;g.beginPath();g.moveTo(W/2+Math.cos(a)*r1,270+Math.sin(a)*r1*.6);g.lineTo(W/2+Math.cos(a)*(r1+80),270+Math.sin(a)*(r1+80)*.6);g.stroke()}}if(WX===1){g.strokeStyle='rgba(200,215,235,.45)';g.lineWidth=1;for(let i=0;i<110;i++){const rx=Math.random()*W,ry=Math.random()*H;g.beginPath();g.moveTo(rx,ry);g.lineTo(rx-4-v*.05,ry+14+v*.12);g.stroke()}}drawCar();g.restore();if(st==='race'){const vg=g.createRadialGradient(W/2,H/2,H*.35,W/2,H/2,H*.95);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(.15+Math.min(.35,v/400))+')');g.fillStyle=vg;g.fillRect(0,0,W,H)}if(st!=='menu'&&st!=='intro')hud();if(st==='intro')drawIntro();
+}
+function quad(a,b,k,col,o=0){g.fillStyle=col;g.beginPath();
+ const ao=a.cx+o*a.w,bo=b.cx+o*b.w;g.moveTo(ao-a.w*k,a.y);g.lineTo(ao+a.w*k,a.y);g.lineTo(bo+b.w*k,b.y);g.lineTo(bo-b.w*k,b.y);g.fill()}
+function standOld(a,m){[-1,1].forEach(sd=>{if(!(m===3||(m===1&&sd===1)||(m===2&&sd===-1)))return;const h=a.w*.75,wd=a.w*1.1+1,x0=a.cx+sd*a.w*(a.rw+.7)-(sd<0?a.w*1.1:0);g.fillStyle='#8b919b';g.fillRect(x0,a.y-h,wd,h+1);g.fillStyle=(a.s>>2)%2?'#c3c8d0':'#a9aeb8';g.fillRect(x0,a.y-h-a.w*.06,wd,a.w*.06+1);
+ for(let r=0;r<4;r++){const hs=((a.s*131+r*977)>>>0)%6;g.fillStyle=['#ff5a36','#2f9bff','#f2c230','#eef2f6','#7bd06b','#ff9ec4'][hs];g.fillRect(x0+wd*(.1+.2*((a.s+r)%4)),a.y-h*(.25+.2*r),wd*.22,h*.14)}
+ if(a.s%16===0){g.fillStyle='#fff';g.fillRect(x0+wd*.5,a.y-h-a.w*.4,Math.max(1,a.w*.02),a.w*.4);g.fillStyle='#d6342a';g.fillRect(x0+wd*.5,a.y-h-a.w*.4,a.w*.2,a.w*.12)}})}
+function stand(a,m){const ss=CRS.th.ss||0;if(!ss){standOld(a,m);return}
+ [-1,1].forEach(sd=>{if(!(m===3||(m===1&&sd===1)||(m===2&&sd===-1)))return;
+  const w=a.w,wd=w*1.1+1,x0=a.cx+sd*w*(a.rw+.7)-(sd<0?w*1.1:0),y=a.y,odd=(a.s>>2)%2,cl=['#ff5a36','#2f9bff','#f2c230','#eef2f6','#7bd06b','#ff9ec4'];
+  const crowd=(h,n)=>{for(let r=0;r<n;r++){g.fillStyle=cl[((a.s*131+r*977)>>>0)%6];g.fillRect(x0+wd*(.1+.2*((a.s+r)%4)),y-h*(.2+.7*r/n),wd*.22,h*.12)}};
+  const flag=h=>{if(a.s%16===0){g.fillStyle='#fff';g.fillRect(x0+wd*.5,y-h-w*.4,Math.max(1,w*.02),w*.4);g.fillStyle='#d6342a';g.fillRect(x0+wd*.5,y-h-w*.4,w*.2,w*.12)}};
+  let h;
+  if(ss===1){h=w*.85;g.fillStyle=odd?'#cfd6e0':'#b9c2ce';g.fillRect(x0,y-h,wd,h+1);g.fillStyle='#3b6fb6';g.fillRect(x0,y-h*.35,wd,h*.08);crowd(h,4);g.fillStyle='#222a36';g.fillRect(x0-wd*.08,y-h-w*.16,wd*1.16,w*.1+1);if(a.s%4===0)g.fillRect(x0+wd*.45,y-h,Math.max(1,w*.03),h);flag(h+w*.16)}
+  else if(ss===2){h=w*.7;['#7a8696','#8e9aaa','#a3afbf'].forEach((c,t)=>{g.fillStyle=c;g.fillRect(x0,y-h*(t+1)/3,wd,h/3+1)});crowd(h,3);g.fillStyle=odd?'#d6342a':'#fff';g.fillRect(x0,y-w*.1,wd,w*.1);if(a.s%8<4){g.fillStyle=['#ff5a36','#2f9bff','#f2c230'][(a.s>>3)%3];g.beginPath();g.moveTo(x0,y-h);g.lineTo(x0+wd,y-h);g.lineTo(x0+wd*.5,y-h-w*.2);g.fill()}flag(h)}
+  else if(ss===3){h=w*.45;g.fillStyle=odd?'#c8ccd2':'#aeb4bc';g.fillRect(x0,y-h,wd,h+1);crowd(h,3);g.fillStyle=['#d6342a','#1d4fa8','#f2c230','#1f8a4c'][(a.s>>4)%4];g.fillRect(x0,y-h-w*.28,wd,w*.26);g.fillStyle='rgba(255,255,255,.7)';g.fillRect(x0,y-h-w*.17,wd,w*.04+1);flag(h+w*.28)}
+  else if(ss===4){h=w*1.7;g.fillStyle=odd?'#222a38':'#2b3446';g.fillRect(x0,y-h,wd,h+1);for(let r=0;r<6;r++){g.fillStyle=((a.s*7+r*13)%5<3)?'#ffd98a':'#3a4558';g.fillRect(x0+wd*.15,y-h*(.12+r*.15),wd*.7,h*.08)}if(a.s%12<6){g.fillStyle=['#00e5ff','#ff3d9a','#76ff03'][(a.s>>4)%3];g.fillRect(x0,y-h*.98,wd,h*.14)}crowd(w*.5,2)}
+  else{h=w*.38;g.fillStyle=odd?'#7a5233':'#6a4529';g.fillRect(x0,y-h,wd,h+1);crowd(h,2);g.fillStyle='#4a4f58';g.beginPath();g.moveTo(x0-wd*.05,y-h);g.lineTo(x0+wd*1.05,y-h);g.lineTo(x0+wd*.5,y-h-w*.22);g.fill();g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.moveTo(x0+wd*.25,y-h-w*.11);g.lineTo(x0+wd*.75,y-h-w*.11);g.lineTo(x0+wd*.5,y-h-w*.22);g.fill()}
+ })}
+function tree(px,y,s){if(s<1)return;const k=CRS.th.k;
+ if(k==='palm'){g.fillStyle='#8a6a3a';g.fillRect(px-s*.04,y-s*.8,s*.08,s*.8);g.strokeStyle=TOD.tree;g.lineWidth=Math.max(1,s*.06);for(let f=-2;f<=2;f++){g.beginPath();g.moveTo(px,y-s*.8);g.quadraticCurveTo(px+f*s*.18,y-s*1.05,px+f*s*.3,y-s*.78);g.stroke()}return}
+ if(k==='cactus'){g.fillStyle=TOD.tree;g.fillRect(px-s*.06,y-s*.7,s*.12,s*.7);g.fillRect(px-s*.2,y-s*.5,s*.14,s*.07);g.fillRect(px-s*.2,y-s*.5,s*.07,s*.25);g.fillRect(px+s*.06,y-s*.4,s*.14,s*.07);g.fillRect(px+s*.13,y-s*.4,s*.07,s*.22);return}
+ if(k==='round'){g.fillStyle='#4a3524';g.fillRect(px-s*.04,y-s*.35,s*.08,s*.35);g.fillStyle=TOD.tree;g.beginPath();g.arc(px,y-s*.6,s*.3,0,6.3);g.fill();return}
+ if(k==='spine'){g.fillStyle='#3a2a1c';g.fillRect(px-s*.04,y-s*.25,s*.08,s*.25);g.fillStyle=TOD.tree;g.beginPath();g.moveTo(px-s*.3,y-s*.2);g.lineTo(px+s*.3,y-s*.2);g.lineTo(px,y-s*1.1);g.fill();g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.moveTo(px-s*.1,y-s*.8);g.lineTo(px+s*.1,y-s*.8);g.lineTo(px,y-s*1.1);g.fill();return}
+ if(CRS.sc===1){g.fillStyle=(Math.floor(px+y)&1)?'#2b3340':'#363f4f';g.fillRect(px-s*.4,y-s*1.6,s*.8,s*1.6);g.fillStyle='#ffd98a';for(let r=0;r<4;r++)g.fillRect(px-s*.3,y-s*(.4+r*.35),s*.6,s*.08);return}g.fillStyle='#3a2a1c';g.fillRect(px-s*.04,y-s*.25,s*.08,s*.25);g.fillStyle=TOD.tree;g.beginPath();g.moveTo(px-s*.3,y-s*.2);g.lineTo(px+s*.3,y-s*.2);g.lineTo(px,y-s*1.1);g.fill()}
+function drawCar(){
+ const sw=ST,sr=Math.min(1,v/car.vmax),cx=W/2+sw*10*sr,y=H-128,bob=Math.sin(performance.now()*.02)*sr*1.5;
+ if(TOD.night){const hg=g.createLinearGradient(0,y,0,y-260);hg.addColorStop(0,'rgba(255,245,200,.3)');hg.addColorStop(1,'rgba(255,245,200,0)');g.fillStyle=hg;g.beginPath();g.moveTo(cx-30,y);g.lineTo(cx+30,y);g.lineTo(cx+150,y-260);g.lineTo(cx-150,y-260);g.fill()}
+ if(bst){g.fillStyle='#7ad7ff';g.fillRect(cx-58,y+bob+30,16,26+Math.random()*34);g.fillRect(cx+42,y+bob+30,16,26+Math.random()*34)}drawC(cx,y+bob,1,car.col,K.b,sw*.025*sr,car.bt,car.vr)}
+function drawCOld(px,py,sc,col,brk,rot){
+ g.save();g.translate(px,py);g.scale(sc,sc);g.rotate(rot);
+ g.fillStyle='rgba(0,0,0,.45)';g.fillRect(-92,32,184,10);
+ g.fillStyle='#14171c';g.fillRect(-88,18,28,26);g.fillRect(60,18,28,26);
+ g.fillStyle=col;g.beginPath();g.moveTo(-90,26);g.lineTo(-80,-6);g.lineTo(-48,-22);g.lineTo(48,-22);g.lineTo(80,-6);g.lineTo(90,26);g.fill();
+ {const gg=g.createLinearGradient(0,-22,0,26);gg.addColorStop(0,'rgba(255,255,255,.25)');gg.addColorStop(.5,'rgba(255,255,255,0)');gg.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=gg;g.beginPath();g.moveTo(-90,26);g.lineTo(-80,-6);g.lineTo(-48,-22);g.lineTo(48,-22);g.lineTo(80,-6);g.lineTo(90,26);g.fill()}
+ g.fillStyle='#0c1118';g.beginPath();g.moveTo(-44,-18);g.lineTo(44,-18);g.lineTo(54,-4);g.lineTo(-54,-4);g.fill();
+ g.fillStyle=brk?'#ff2a2a':'#a01818';g.fillRect(-82,6,36,10);g.fillRect(46,6,36,10);
+ g.fillStyle='#14171c';g.fillRect(-60,22,120,10);
+ g.fillStyle='#e8e8e8';g.fillRect(-14,10,28,9);g.fillStyle='#14171c';g.fillRect(-70,-30,140,6);g.fillRect(-62,-26,6,10);g.fillRect(56,-26,6,10);g.fillStyle='#666';g.beginPath();g.arc(-30,30,5,0,6.3);g.fill();g.beginPath();g.arc(30,30,5,0,6.3);g.fill();if(brk){g.fillStyle='rgba(255,40,40,.3)';g.fillRect(-104,-4,64,34);g.fillRect(40,-4,64,34)}
+ g.restore()}
+function drawRivals(P,pct){R.map(r=>({r,q:rel(r)})).filter(o=>o.q>0&&o.q+pct<N-2).sort((a,b)=>b.q-a.q).forEach(({r,q})=>{const f=q+pct,n=Math.floor(f),a=P[n],b=P[n+1],k=f-n,y=a.y+(b.y-a.y)*k,w=a.w+(b.w-a.w)*k,cx=a.cx+(b.cx-a.cx)*k,sc=w/365;drawC(cx+r.x*(a.rw+(b.rw-a.rw)*k)*w,y-28*sc,sc,r.col,0,0,r.bt,r.vr)})}
+function hud(){
+ const kmh=Math.round(v*3.6),r=v/car.vmax,gear=v<1?'N':Math.min(6,Math.floor(r*6)+1),fr=r*6%1;
+ g.textBaseline='alphabetic';g.fillStyle='rgba(10,14,20,.6)';g.fillRect(10,10,230,96);
+ gauge(kmh,gear);
+ 
+ 
+ const rp=v<1?0:.3+.7*fr;
+ g.textAlign='left';g.font='700 20px sans-serif';g.fillStyle='#eef2f6';g.fillText('LAP '+Math.min(lap+1,LAPS)+(PR?'  練習':' / '+LAPS),22,38);
+ drawTower();drawMap();
+ g.textAlign='left';g.fillStyle='#eef2f6';g.font='16px sans-serif';g.fillText('TOTAL '+fmt(t),22,64);g.fillStyle='#8d9aab';g.fillText('LAP   '+fmt(lt)+(laps.length?'  best '+fmt(Math.min(...laps)):''),22,90);
+ if(t100){g.fillStyle='#7ad7ff';g.fillText('0-100km/h '+t100.toFixed(2)+'秒',22,H-42)}
+ g.fillStyle='#f2c230';g.font='16px sans-serif';g.textAlign='left';g.fillText('追い抜き '+ot,22,H-64);
+ 
+ g.fillStyle='rgba(10,14,20,.6)';
+ 
+ g.textAlign='center';g.fillStyle='#eef2f6';g.font='700 18px sans-serif';g.fillText(nm[Math.floor(z)%L],W/2,32);if(SD[Math.floor(z)%L]&&st==='race'){g.fillStyle='#f2c230';g.fillText('応援席！',W/2,56)}if(tc>0){g.fillStyle='#7ad7ff';g.fillText(toast,W/2,82)}if(tc2>0){g.fillStyle='#ffd23f';g.font='700 26px sans-serif';g.textAlign='center';g.fillText(toast2,W/2,118)}
+ if(dr){g.fillStyle='#7ad7ff';g.fillText('スリップストリーム！',W/2,330)}
+ if(st==='count'){const lit=Math.min(5,Math.floor((4.8-cd)/.7)),go=cd<.35;g.fillStyle='#14181f';g.fillRect(W/2-250,40,500,14);g.fillRect(W/2-250,40,10,200);g.fillRect(W/2+240,40,10,200);g.fillStyle='#0b0e13';g.fillRect(W/2-190,54,380,120);
+ for(let i=0;i<5;i++){const lx=W/2-152+i*76;for(let j=0;j<2;j++){const ly=66+j*50,on=i<lit&&!go;g.fillStyle='#1a1e25';g.fillRect(lx-26,ly-4,52,46);g.fillStyle=go?'#10331c':on?'#ff2a2a':'#3a1010';g.beginPath();g.roundRect(lx-22,ly,44,38,12);g.fill();if(on){g.fillStyle='rgba(255,70,70,.35)';g.beginPath();g.roundRect(lx-30,ly-8,60,54,16);g.fill()}}}
+ if(go){g.fillStyle='#2be86b';g.font='700 40px sans-serif';g.textAlign='center';g.fillText('GO!',W/2,214)}}
+ else if(st==='race'&&t<.8){g.fillStyle='#fff';g.font='700 110px sans-serif';g.fillText('GO',W/2,250)}
+ if(Math.abs(x)>1.05&&st==='race'){g.fillStyle='#ff5a36';g.font='700 20px sans-serif';g.fillText('コース外！減速中',W/2,300)}
+}
+function tp(){if(ps.hidden){prev=st;if(st==='race'||st==='count')st='pause';ps.hidden=false;for(const k in K)K[k]=0}else{ps.hidden=true;if(st==='pause')st=prev}}
+$('rs').onclick=$('gear').onclick=tp;
+$('rr').onclick=()=>{ps.hidden=true;start(car,PR)};
+$('hm').onclick=()=>{ps.hidden=true;menu('アペックス・ドライブ',MSG)};
+$('vlm').oninput=e=>{vol=e.target.value/100;if(mg)mg.gain.value=vol*.5};
+function aud(){try{if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();mg=ctx.createGain();mg.gain.value=vol*.5;mg.connect(ctx.destination);eng=ctx.createOscillator();eng.type='sawtooth';const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=800;eg=ctx.createGain();eg.gain.value=0;eng.connect(f);f.connect(eg);eg.connect(mg);eng.start()}if(ctx.state==='suspended')ctx.resume()}catch(e){ctx=null}}
+function beep(f,d){if(!ctx)return;const o=ctx.createOscillator(),q=ctx.createGain(),n=ctx.currentTime;o.frequency.value=f;q.gain.setValueAtTime(.3,n);q.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(q);q.connect(mg);o.start();o.stop(n+d)}
+function sfx(){if(!ctx)return;const on=st==='race'||st==='count'||st==='done',r=Math.min(1.1,v/car.vmax),gr=Math.min(5,Math.floor(r*6)),rp=.3+.7*(r*6%1),n=ctx.currentTime;eng.frequency.setTargetAtTime(38+rp*95+gr*9,n,.05);eg.gain.setTargetAtTime(on?.1+.25*Math.min(1,r*2)*(K.g?1:.5):0,n,.08)}
+const RN=['N','R','SR','SSR','UR','LE'],RC=['#9aa5b1','#4aa3ff','#c14bff','#f2c230','#ff4d6d','#7affff'],RP=[.46,.73,.88,.96,.995,1],RF=[50,120,250,500,1000,2000],COST=300,PRIZE=[800,600,450,350,250,200,150,120,100,100],scr=$('scr');
+let S={coins:600,own:[0,1],sel:0};
+try{const o=JSON.parse(localStorage.getItem('apx'));if(o&&o.own)S=o}catch(e){}
+const sv=()=>{try{localStorage.setItem('apx',JSON.stringify(S))}catch(e){}};
+if(S.crs&&COURSES[S.crs]){crsI=S.crs;CRS=COURSES[crsI];buildTrack(CRS.t,CRS.km)}
+car=CARS[S.sel];
+const ttl=(h,m)=>{ov.style.background='';ov.querySelector('h1').style.display='';$('m').style.display='';ov.querySelector('h1').textContent=h;$('m').textContent=m};
+function specHTML(c){const b=(l,p)=>`<div>${l}</div><div class='bar'><i style='width:${Math.max(4,Math.min(100,p*100))}%'></i></div>`;
+ return `<div class='spec'><b style='color:${RC[c.rr]}'>${RN[c.rr]}</b> <b>${c.n}</b><div style='height:14px;background:${c.col};border-radius:4px;margin:6px 0'></div>${b('出力 '+c.ps+'PS',c.ps/MAXPS)}${b('加速 0-100km/h '+c.t100.toFixed(2)+'秒',(6.5-c.t100)/5.5)}${b('最高速 '+Math.round(c.vmax*3.6)+'km/h',c.vmax*3.6/420)}${b('グリップ',c.grip/1.4)}<div>重量 ${Math.round(c.m)}kg</div></div>`}
+function menuV1(h,m){ttl(h,(m||MSG)+bl());car=CARS[S.sel];
+ scr.innerHTML=`<div class='coin'>◎ ${S.coins} コイン</div>${specHTML(car)}<div class='cars'><button class='big' id='bp'>▶ プレイ</button><button id='bg'>ガレージ</button><button id='bc'>ガチャ（${COST}）</button></div>`;
+ $('bp').onclick=()=>start(car);$('bg').onclick=garage;$('bc').onclick=()=>gacha();ov.style.display='flex';st='menu'}
+function garage(){ttl('ガレージ','車をタップすると性能が表示されます');
+ scr.innerHTML=`<div class='cl' style='gap:8px;width:100%;max-width:560px;justify-content:center'><span>プレイヤー名</span><input id='pn' maxlength='12' value='${esc(S.nick)}' style='background:#0e141c;color:#fff;border:1px solid #445;padding:4px 6px'><button id='pnb' style='padding:4px 10px'>変更</button></div><div class='gl'><div class='grid'>${CARS.map((c,i)=>S.own.includes(i)?`<button class='slot' data-i='${i}' style='box-shadow:inset 0 -3px 0 ${RC[c.rr]}'><div class='sw' style='background:${c.col}'></div><b style='color:${RC[c.rr]}'>${RN[c.rr]}</b><br>${c.n}</button>`:`<button class='slot lock'><div class='sw' style='background:#2d3745'></div>？？？</button>`).join('')}</div><div id='sp'></div></div><div class='cars'><button id='bk'>戻る</button></div>`;
+ $('pnb').onclick=()=>{const v=$('pn').value.replace(/[<>&'"]/g,'').trim().slice(0,12);if(v){S.nick=v;sv();$('pn').value=v}};scr.querySelectorAll('.slot[data-i]').forEach(b=>b.onclick=()=>pick(+b.dataset.i));$('bk').onclick=()=>menu('アペックス・ドライブ');pick(S.sel)}
+function pick(i){$('sp').innerHTML=`<canvas id='gc' width='260' height='120'></canvas>`+specHTML(tune(CARS[i]))+`<div class='cl' style='margin-top:6px'><input id='rn' maxlength='14' value='${esc(CARS[i].n)}' style='flex:1;min-width:0;background:#0e141c;color:#fff;border:1px solid #445;padding:4px 6px'><button id='rnb' style='padding:4px 10px'>名前変更</button></div><div class='cars' style='margin-top:8px'><button class='big' id='ok'>決定してホームへ</button><button id='cu'>カスタマイズ</button></div>`;drawC(130,72,1.15,CARS[i].col,0,0,CARS[i].bt,CARS[i].vr,$('gc').getContext('2d'));scr.querySelectorAll('.slot').forEach(s=>s.style.borderColor=+s.dataset.i===i?'#ff5a36':'');$('rnb').onclick=()=>{const v=$('rn').value.replace(/[<>&'"]/g,'').trim().slice(0,14);S.names=S.names||{};if(v){CARS[i].n=v;S.names[i]=v}else{CARS[i].n=CARS[i].on;delete S.names[i]}sv();garage();pick(i)};$('cu').onclick=()=>custom(i);$('ok').onclick=()=>{S.sel=i;sv();menu('アペックス・ドライブ')}}
+function gacha(r){ttl('ガチャ',`コインで新しい車を入手（${COST}コイン／1回）`);
+ scr.innerHTML=`<div class='coin'>◎ ${S.coins} コイン</div><div id='gr' style='min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px'>${r||`<div class='cap idle' style='--c:#ff5a36'></div>`}</div><div class='cars'><button class='big' id='pl' ${S.coins<COST?'disabled':''}>1回引く（${COST}）</button><button id='p10' ${S.coins<COST*9?'disabled':''}>10連（${COST*9}）</button><button id='pg'>パーツ</button><button id='bk'>戻る</button></div>`;
+ $('bk').onclick=()=>menu('アペックス・ドライブ');$('pl').onclick=pull;$('p10').onclick=pull10;$('pg').onclick=()=>gachaP()}
+function pull(){if(S.coins<COST)return;aud();S.coins-=COST;const q=Math.random(),rt=RP.findIndex(p=>q<p),pool=CARS.map((c,i)=>i).filter(i=>CARS[i].rr===rt),i=pool[Math.floor(Math.random()*pool.length)],dup=S.own.includes(i);
+ if(dup)S.coins+=RF[rt];else S.own.push(i);sv();$('gr').innerHTML=`<div class='cap' style='--c:${RC[rt]}'></div>`;$('pl').disabled=true;$('p10').disabled=true;$('bk').disabled=true;[0,300,600,900,1200].forEach((d,k)=>setTimeout(()=>beep(300+k*120+rt*60,.15),d));setTimeout(()=>{$('gr').innerHTML=`<div class='flash' style='--c:${RC[rt]}'></div>`;beep(rt>1?1500:1000,.4)},1500);
+ setTimeout(()=>{gacha(`<div class='rv' style='--c:${RC[rt]}'><div class='rays'></div><div class='rbn'>${RN[rt]}</div></div><canvas id='gc' width='260' height='120' class='slide'></canvas>`+specHTML(CARS[i])+`<div class='coin'>${dup?'ダブリ！ '+RF[rt]+'コイン返却':'NEW！ ガレージに追加'}</div>`);beep(rt>1?1320:880,.3);drawC(130,72,1.15,CARS[i].col,0,0,CARS[i].bt,CARS[i].vr,$('gc').getContext('2d'))},2000)}
+function gaugeOld(kmh,gear){const cx=W-110,cy=H-100,R=88,mx=Math.ceil(car.vmax*3.6*1.05/50)*50,a0=.75*Math.PI,sw=1.5*Math.PI,an=f=>a0+sw*f;
+ g.fillStyle='rgba(10,14,20,.78)';g.beginPath();g.arc(cx,cy,R+8,0,6.3);g.fill();
+ g.lineWidth=6;g.strokeStyle='#2d3745';g.beginPath();g.arc(cx,cy,R-6,a0,a0+sw);g.stroke();
+ g.strokeStyle='#ff2a2a';g.beginPath();g.arc(cx,cy,R-6,an(.88),a0+sw);g.stroke();
+ g.strokeStyle='#ff5a36';g.beginPath();g.arc(cx,cy,R-6,a0,an(Math.min(1,kmh/mx)));g.stroke();
+ g.lineWidth=2;g.fillStyle='#8d9aab';g.font='10px sans-serif';g.textAlign='center';g.strokeStyle='#8d9aab';
+ for(let k=0;k<=mx;k+=50){const a=an(k/mx),big=k%100===0,e=R-(big?24:19);g.beginPath();g.moveTo(cx+Math.cos(a)*(R-14),cy+Math.sin(a)*(R-14));g.lineTo(cx+Math.cos(a)*e,cy+Math.sin(a)*e);g.stroke();if(big)g.fillText(k,cx+Math.cos(a)*(R-36),cy+Math.sin(a)*(R-36)+3)}
+ const na=an(Math.min(1,kmh/mx));g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(na)*(R-18),cy+Math.sin(na)*(R-18));g.stroke();
+ g.fillStyle='#eef2f6';g.beginPath();g.arc(cx,cy,5,0,6.3);g.fill();
+ g.font='700 30px Bahnschrift,sans-serif';g.fillText(kmh,cx,cy+36);g.font='11px sans-serif';g.fillStyle='#8d9aab';g.fillText('km/h  '+Math.min(MAXPS,car.ps)+'PS',cx,cy+50);g.font='700 20px sans-serif';g.fillStyle='#ff5a36';g.fillText(gear,cx,cy-24)}
+function mkMap(){const a=.006,s=cv.reduce((p,c)=>p+c,0),dth=(2*Math.PI-s*a)/L;let th=0,x=0,y=0,pts=[[0,0]];for(let i=0;i<L;i++){th+=cv[i]*a+dth;x+=Math.cos(th);y+=Math.sin(th);pts.push([x,y])}
+ const ex=x,ey=y;pts=pts.map((p,i)=>[p[0]-ex*i/L,p[1]-ey*i/L]);
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),k=Math.min(150/(x1-x0||1),90/(y1-y0||1));
+ MP=pts.map(p=>[(p[0]-x0)*k,(p[1]-y0)*k])}
+function drawMap(){const bx=W-176,by=10;g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=2;g.beginPath();for(let i=0;i<=L;i+=6){const p=MP[i];if(i)g.lineTo(bx+8+p[0],by+8+p[1]);else g.moveTo(bx+8+p[0],by+8+p[1])}g.closePath();g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=5;g.stroke();g.strokeStyle='#fff';g.lineWidth=2.5;g.stroke();
+ const dot=(d,c,r)=>{const p=MP[Math.floor(((d%L)+L)%L)];g.fillStyle=c;g.beginPath();g.arc(bx+8+p[0],by+8+p[1],r,0,6.3);g.fill()};R.forEach(r=>dot(r.d,r.col,3));dot(dist,'#ff5a36',4.5);g.fillStyle='#fff';g.fillRect(bx+6+MP[0][0],by+6+MP[0][1],4,4)}
+function drawTower(){const rows=[{n:S.nick,me:1,d:dist,c:car.col}].concat(R.map((r,i)=>({n:r.nick||'CPU-'+'ABCDEFGHI'[i],d:r.d,c:r.col}))).sort((a,b)=>b.d-a.d),y0=116;
+ g.fillStyle='rgba(10,14,20,.6)';g.fillRect(10,y0,190,rows.length*24+6);
+ rows.forEach((o,i)=>{const y=y0+4+i*24,me=o.me;g.fillStyle=me?'rgba(255,90,54,.85)':'rgba(255,255,255,.07)';g.fillRect(14,y,182,21);g.fillStyle='#fff';g.font='700 14px sans-serif';g.textAlign='left';g.fillText(i+1,22,y+16);g.fillStyle=o.c;g.fillRect(40,y+4,6,13);g.fillStyle='#fff';g.fillText(o.n,54,y+16);if(i){g.textAlign='right';g.font='12px sans-serif';g.fillText('+'+((rows[0].d-o.d)*SEGM/Math.max(10,v)).toFixed(1),190,y+16)}})}
+function gaugeV2(kmh,gear){const rp=kmh<3?0:(.3+.7*((v/car.vmax)*6%1));
+ g.fillStyle='rgba(10,14,20,.6)';g.fillRect(W-320,H-132,310,122);
+ for(let i=0;i<30;i++){g.fillStyle=i<rp*30?(i>24?'#ff2a2a':'#ffffff'):'rgba(255,255,255,.15)';g.fillRect(W-312+i*10,H-30,8,12)}
+ g.textAlign='right';g.font='italic 700 62px Bahnschrift,sans-serif';g.fillStyle='#fff';g.fillText(kmh,W-132,H-62);g.font='13px sans-serif';g.fillStyle='#9fb0c4';g.fillText('km/h',W-132,H-46);
+ g.strokeStyle='#fff';g.lineWidth=2;g.strokeRect(W-118,H-122,100,78);g.textAlign='center';g.fillStyle='#fff';g.font='700 54px sans-serif';g.fillText(gear,W-68,H-70);g.font='11px sans-serif';g.fillStyle='#9fb0c4';g.fillText('GEAR  '+Math.min(MAXPS,car.ps)+'PS',W-68,H-54)}
+function menu(h,m){ttl(h,'');EV=null;GPM=false;FIN=false;ONL=false;LOBBY=false;PEERS=[];if(RM){try{RM.leave()}catch(e){}RM=null}if(CRS.gp)setCourse(S.crs||0);car=CARS[S.sel];TOD=mkTod();R=[];WX=+$('wx').value;
+ const td=new Date().toDateString();let bn='';if(S.day!==td){S.day=td;S.coins+=200;sv();bn=`<div class='coin' style='text-align:center'>ログインボーナス ＋200 Cr.</div>`}
+ if(m&&m!==MSG)bn+=`<div class='coin' style='text-align:center'>${h}<br><small>${m}</small></div>`;
+ const xp=S.xp||0,lv=Math.floor(Math.sqrt(xp/100))+1,lo=(lv-1)**2*100,hi=lv**2*100,c=tune(car);
+ const gb=(l,v,p)=>`<div style='display:flex;justify-content:space-between'><span>${l}</span><b>${v}</b></div><div class='bar'><i style='width:${Math.max(4,Math.min(100,p*100))}%;background:#fff'></i></div>`;
+ ov.style.background='linear-gradient(180deg,rgba(10,14,20,.85),rgba(10,14,20,.25) 40%,rgba(10,14,20,.9))';ov.querySelector('h1').style.display='none';$('m').style.display='none';
+ scr.innerHTML=`<div class='gt'>${bn}<div class='gtop'><div><b>${esc(S.nick)}　Lv.${lv}</b><span class='xpb'><i style='width:${(xp-lo)/(hi-lo)*100}%'></i></span></div><div class='gtt'>APEX DRIVE</div><div class='cr'>Cr. ${S.coins}</div></div><div class='gmid'><div style='text-align:center'>${'<canvas id="hc" width="260" height="130"></canvas>'}<div class='gname'><span style='color:${RC[c.rr]}'>${RN[c.rr]}</span> ${c.n}</div></div><div class='gstat'>${gb('出力',c.ps+'PS',c.ps/MAXPS)}${gb('0-100km/h',c.t100.toFixed(2)+'秒',(6.5-c.t100)/5.5)}${gb('最高速',Math.round(c.vmax*3.6)+'km/h',c.vmax*3.6/420)}${gb('グリップ',c.grip.toFixed(2),c.grip/1.4)}</div></div><div class='cpick'><button id='cp'>◀</button><span>${CRS.n}・${CRS.km}km${bl()}</span><button id='cn'>▶</button></div><div class='gtiles'><button class='tile pri' id='bp'><small>RACE</small><b>レース</b><i>${S.wins||0}勝 / ${S.races||0}戦</i></button><button class='tile' id='bt'><small>PRACTICE</small><b>練習</b><i>ライバルなし・周回無制限</i></button><button class='tile' id='bq'><small>GRAND PRIX</small><b>グランプリ</b><i>${S.gps&&!S.gps.done?'第'+(S.gps.round+1)+'戦':'全5戦'}</i></button><button class='tile' id='bs'><small>SPECIAL</small><b>スペシャル</b><i>${Object.keys(S.ev).length}/${EVS.length} クリア</i></button><button class='tile' id='bo'><small>ONLINE</small><b>オンライン</b><i>対人戦</i></button><button class='tile' id='bn'><small>SPONSOR</small><b>スポンサー</b><i>${SPON[S.sp].n}</i></button><button class='tile' id='bg'><small>GARAGE</small><b>ガレージ</b><i>${S.own.length} / ${CARS.length} 台</i></button><button class='tile' id='bc'><small>SHOP</small><b>ガチャ</b><i>${COST} Cr.${S.coins>=COST?' ●':''}</i></button></div></div>`;
+ $('bp').onclick=()=>start(car);$('bg').onclick=garage;$('bc').onclick=()=>gacha();
+ drawC(130,78,1.2,c.col,0,0,c.bt,c.vr,$('hc').getContext('2d'));$('bt').onclick=()=>start(car,1);$('bq').onclick=()=>gpScreen();$('bs').onclick=()=>special();$('bo').onclick=goOnline;$('bn').onclick=sponsors;$('cp').onclick=()=>{setCourse(nextC(-1));goHome()};$('cn').onclick=()=>{setCourse(nextC(1));goHome()};
+ ov.style.display='flex';st='menu'}
+function pull10(){const cost=COST*9;if(S.coins<cost)return;aud();S.coins-=cost;const out=[];for(let n=0;n<10;n++){const q=Math.random();let rt=RP.findIndex(p=>q<p);if(n===9&&rt<1)rt=1;const pool=CARS.map((c,i)=>i).filter(i=>CARS[i].rr===rt),i=pool[Math.floor(Math.random()*pool.length)],dup=S.own.includes(i);out.push({i,rt,dup});if(dup)S.coins+=RF[rt];else S.own.push(i)}
+ sv();const best=Math.max(...out.map(o=>o.rt));$('gr').innerHTML=`<div class='cap' style='--c:${RC[best]}'></div>`;$('pl').disabled=true;$('p10').disabled=true;$('bk').disabled=true;[0,300,600,900,1200,1500].forEach((d,k)=>setTimeout(()=>beep(300+k*110+best*60,.15),d));
+ setTimeout(()=>{$('gr').innerHTML=`<div class='flash' style='--c:${RC[best]}'></div>`;beep(1400,.4)},1800);
+ setTimeout(()=>{gacha(`<div class='rv' style='--c:${RC[best]}'><div class='rays'></div><div class='rbn'>${RN[best]}</div></div><div class='g10'>${out.map(o=>`<div class='gi' style='border-color:${RC[o.rt]};color:${RC[o.rt]};box-shadow:0 0 ${o.rt>=2?10:0}px ${RC[o.rt]};background:linear-gradient(180deg,${RC[o.rt]}22,transparent)'><b>${RN[o.rt]}</b><span>${CARS[o.i].n}</span><i>${o.dup?'DUP +'+RF[o.rt]:'NEW'}</i></div>`).join('')}</div>`);beep(1320,.3)},2600)}
+function gauge(kmh,gear){const cx=W/2,cy=H-44,r=v/car.vmax,rp=kmh<3?0:.3+.7*(r*6%1),thr=((K.g||$('asi').value==='2')&&!K.b)?1:0,a0=.75*Math.PI,sw=1.5*Math.PI;
+ const bar=(x,p,c)=>{g.fillStyle='rgba(255,255,255,.18)';g.fillRect(x,cy-24,6,48);g.fillStyle=c;g.fillRect(x,cy+24-48*p,6,48*p)};
+ g.fillStyle='rgba(8,12,18,.5)';g.fillRect(cx-210,cy-34,420,68);
+ bar(cx-196,thr,'#6ee26e');bar(cx-182,K.b?1:0,'#ff4040');
+ const tx=cx-130;g.fillStyle='rgba(255,255,255,.08)';g.beginPath();g.arc(tx,cy,30,0,6.3);g.fill();
+ g.lineWidth=4;g.strokeStyle='rgba(255,255,255,.25)';g.beginPath();g.arc(tx,cy,25,a0,a0+sw);g.stroke();g.strokeStyle='#ff3030';g.beginPath();g.arc(tx,cy,25,a0+sw*.8,a0+sw);g.stroke();
+ const na=a0+sw*rp;g.strokeStyle='#fff';g.lineWidth=2.5;g.beginPath();g.moveTo(tx,cy);g.lineTo(tx+Math.cos(na)*22,cy+Math.sin(na)*22);g.stroke();
+ g.textAlign='center';g.fillStyle='#e8eef5';g.font='italic 700 54px Bahnschrift,sans-serif';g.fillText(kmh,cx-20,cy+18);
+ g.fillStyle='#e33a3a';g.fillRect(cx-78,cy-32,116,4);g.font='11px sans-serif';g.fillStyle='#9fb0c4';g.fillText('km/h',cx+52,cy-2);
+ g.font='700 44px sans-serif';g.fillStyle=rp>.85?'#ff3030':'#fff';g.fillText(gear,cx+104,cy+16);g.font='10px sans-serif';g.fillStyle='#9fb0c4';g.fillText('GEAR',cx+104,cy-22);
+ bar(cx+176,nit,bst?'#bdeaff':'#4bb8ff');g.fillStyle='#9fb0c4';g.font='9px sans-serif';g.fillText('BOOST',cx+179,cy+34)}
+function setCourse(i){crsI=i;CRS=COURSES[i];buildTrack(CRS.t,CRS.km);if(!COURSES[i].gp){S.crs=i;sv()}}
+const sh=(c,f)=>'#'+[1,3,5].map(i=>Math.round(parseInt(c.slice(i,i+2),16)*f).toString(16).padStart(2,'0')).join('');
+function mkTod(){const i=EV?EV.tod:ONL?0:+$('tod').value,b=TODS[i],f=[1,.62,.28][i],h=CRS.th;return Object.assign({},b,{night:i===2,g:h.g.map(c=>sh(c,f)),mt:sh(h.mt,f),tree:sh(h.tree,f),sky:i===0&&h.sky?h.sky:b.sky,rd:h.rd?h.rd.map(c=>sh(c,f)):b.rd})}
+function goHome(){menu('アペックス・ドライブ')}
+function carSVG(c){return `<svg viewBox='0 0 220 90' width='100%' style='max-width:260px'><ellipse cx='110' cy='80' rx='90' ry='7' fill='rgba(0,0,0,.45)'/><path d='M14 62 L26 38 L66 18 L154 18 L194 38 L206 62 Z' fill='${c.col}'/><path d='M70 24 L150 24 L176 40 L44 40 Z' fill='#0c1118'/><rect x='24' y='50' width='34' height='8' rx='3' fill='#ff2a2a'/><rect x='162' y='50' width='34' height='8' rx='3' fill='#ff2a2a'/><rect x='8' y='56' width='30' height='26' rx='4' fill='#14171c'/><rect x='182' y='56' width='30' height='26' rx='4' fill='#14171c'/></svg>`}
+function menuV2(h,m){ttl(h,(m&&m!==MSG?m:CRS.n+'（全長約'+CRS.km+'km）　Esc：設定・ポーズ')+bl());car=CARS[S.sel];TOD=mkTod();R=[];WX=+$('wx').value;
+ const td=new Date().toDateString();let bn='';if(S.day!==td){S.day=td;S.coins+=200;sv();bn=`<div class='coin'>ログインボーナス ＋200コイン</div>`}
+ const xp=S.xp||0,lv=Math.floor(Math.sqrt(xp/100))+1,lo=(lv-1)**2*100,hi=lv**2*100;
+ ov.style.background='linear-gradient(90deg,rgba(10,14,20,.94),rgba(10,14,20,.6) 65%,rgba(10,14,20,.25))';
+ scr.innerHTML=`<div class='gl'><div style='display:flex;flex-direction:column;gap:10px;align-items:center'>${bn}<div class='lv'>Lv.${lv}<div class='bar' style='width:150px'><i style='width:${(xp-lo)/(hi-lo)*100}%'></i></div></div><div class='chips'><span class='coin'>◎ ${S.coins}</span><span>勝利 ${S.wins||0}</span><span>出走 ${S.races||0}</span><span>所持 ${S.own.length}/${CARS.length}</span></div><select id='crs' onchange='setCourse(+this.value);goHome()' style='font:inherit;padding:6px;max-width:230px'>${COURSES.map((c,i)=>`<option value='${i}'${i===crsI?' selected':''}>${c.n}</option>`).join('')}</select><div class='cars' style='flex-direction:column'><button class='big' id='bp'>▶ プレイ</button><button id='bg'>ガレージ</button><button id='bc'>ガチャ（${COST}）${S.coins>=COST?' ●':''}</button></div></div><div style='display:flex;flex-direction:column;align-items:center;gap:6px'>${carSVG(car)}${specHTML(car)}</div></div>`;
+ $('bp').onclick=()=>start(car);$('bg').onclick=garage;$('bc').onclick=()=>gacha();ov.style.display='flex';st='menu'}
+const PT=['エンジン','タイヤ','ブレーキ','軽量化','空力','ターボ','ギアボックス','サスペンション','ECU','ボディ補強'],PB=[.03,.06,.1,.15,.2,.3],PN=['スポーツ','レーシング','ワークス','ファクトリー','ウルトラ','レジェンド'],PC=200;
+S.parts=S.parts||[];S.eq=S.eq||{};S.sp=S.sp||0;S.ev=S.ev||{};S.nick=S.nick||'Player'+(Math.floor(Math.random()*900)+100);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+function eqOf(i){return S.eq[i]||(S.eq[i]={})}
+function tune(c){c=c.base||c;const e=eqOf(CARS.indexOf(c)),pb=t=>{const p=S.parts.find(x=>x.id===e[t]);return p?PB[p.r]:0},t=Object.assign({},c);
+ t.base=c;t.ps=Math.round(c.ps*(1+pb(0)+pb(5)*.3+pb(8)*.5));t.grip=c.grip*(1+pb(1)+pb(7)*.6+pb(9)*.3);t.br=c.br*(1+pb(2)+pb(7)*.4);t.m=c.m*(1-pb(3)-pb(9)*.4);t.cda=c.cda*(1-pb(4));t.al=c.al*(1+pb(0)*.5+pb(1)*.5+pb(5)*1.5+pb(6)*.8);
+ let v=0,tt=0;t.t100=0;while(tt<150){v+=accel(t,v,0,0,1)*.004;tt+=.004;if(!t.t100&&v>=27.78)t.t100=tt}t.vmax=v;return t}
+function usedBy(p,i){const k=Object.keys(S.eq).find(k=>+k!==i&&S.eq[k][p.t]===p.id);return k!==undefined?' ('+CARS[+k].n+'に装着中)':''}
+function customOld(i){ttl('カスタマイズ',CARS[i].n);const c=CARS[i],e=eqOf(i);
+ const row=t=>{const own=S.parts.filter(p=>p.t===t);return `<label class='cl'><span>${PT[t]}</span><select data-t='${t}'><option value=''>なし</option>${own.map(p=>`<option value='${p.id}'${e[t]===p.id?' selected':''}>${RN[p.r]} ${PN[p.r]} +${Math.round(PB[p.r]*100)}%${usedBy(p,i)}</option>`).join('')}</select></label>`};
+ scr.innerHTML=`<div class='gl'><div style='text-align:center'><canvas id='gc' width='260' height='120'></canvas><div id='cs2'></div></div><div class='spec' style='min-width:290px'>${[0,1,2,3,4].map(row).join('')}<div class='cars' style='margin-top:8px'><button id='bk'>戻る</button><button id='pp'>パーツガチャ</button></div></div></div>`;
+ $('cs2').innerHTML=specHTML(tune(c));drawC(130,72,1.15,c.col,0,0,c.bt,c.vr,$('gc').getContext('2d'));
+ scr.querySelectorAll('select[data-t]').forEach(s=>s.onchange=()=>{const t=+s.dataset.t,id=s.value?+s.value:0;if(id)for(const k in S.eq)if(S.eq[k][t]===id)delete S.eq[k][t];if(id)e[t]=id;else delete e[t];sv();custom(i)});
+ $('bk').onclick=()=>garage();$('pp').onclick=()=>gachaP()}
+const PDESC=['出力','グリップ','ブレーキ','軽量化','空気抵抗','加速＋出力','加速','グリップ＋ブレーキ','出力(制御)','軽量＋グリップ'];
+function custom(i){ttl('カスタマイズ',CARS[i].n);const c=CARS[i],e=eqOf(i);
+ const row=t=>{const own=S.parts.filter(p=>p.t===t).sort((a,b)=>b.r-a.r);return `<div style='margin-bottom:8px'><div style='font-size:11px;opacity:.8;margin-bottom:3px'>${PT[t]}（${PDESC[t]}）</div><div class='chips2'><button class='chip${e[t]?'':' on'}' data-t='${t}' data-id='0'>なし</button>${own.map(p=>`<button class='chip${e[t]===p.id?' on':''}' data-t='${t}' data-id='${p.id}' style='--c:${RC[p.r]};box-shadow:0 0 ${p.r>=2?8:0}px ${RC[p.r]}'><b>${RN[p.r]}</b> ${PN[p.r]} +${Math.round(PB[p.r]*100)}%${usedBy(p,i)?'*':''}</button>`).join('')}</div></div>`};
+ scr.innerHTML=`<div class='gl'><div style='text-align:center'><canvas id='gc' width='260' height='120'></canvas><div id='cs2'></div></div><div class='spec' id='cpn' style='min-width:300px;max-width:390px;max-height:340px;overflow-y:auto'>${PT.map((_,t)=>row(t)).join('')}<div style='font-size:10px;opacity:.7'>* 他の車に装着中（選ぶとこの車に移ります）</div></div></div><div class='cars'><button id='bk'>戻る</button><button id='pp'>パーツガチャ</button></div>`;
+ $('cs2').innerHTML=specHTML(tune(c));drawC(130,72,1.15,c.col,0,0,c.bt,c.vr,$('gc').getContext('2d'));
+ scr.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const t=+b.dataset.t,id=+b.dataset.id;if(id)for(const k in S.eq)if(S.eq[k][t]===id)delete S.eq[k][t];if(id)e[t]=id;else delete e[t];sv();const sc=$('cpn').scrollTop,oc=ov.scrollTop;custom(i);$('cpn').scrollTop=sc;ov.scrollTop=oc});
+ $('bk').onclick=()=>garage();$('pp').onclick=()=>gachaP()}
+function gachaP(r){ttl('パーツガチャ',`エンジン・タイヤなどが出ます（${PC}コイン／1回）`);
+ scr.innerHTML=`<div class='coin'>◎ ${S.coins}　所持パーツ ${S.parts.length}</div><div id='gr' style='min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%'>${r||`<div class='cap idle' style='--c:#4aa3ff'></div>`}</div><div class='cars'><button class='big' id='pl' ${S.coins<PC?'disabled':''}>1回（${PC}）</button><button id='p10' ${S.coins<PC*9?'disabled':''}>10連（${PC*9}）</button><button id='bk'>戻る</button></div>`;
+ $('bk').onclick=()=>garage();$('pl').onclick=()=>pullP(1);$('p10').onclick=()=>pullP(10)}
+function pullP(n){const cost=n===10?PC*9:PC;if(S.coins<cost)return;aud();S.coins-=cost;const out=[];for(let k=0;k<n;k++){const q=Math.random();let r=RP.findIndex(p=>q<p);if(n===10&&k===9&&r<1)r=1;const p={id:Date.now()*10+k,t:Math.floor(Math.random()*PT.length),r};S.parts.push(p);out.push(p)}
+ sv();const best=Math.max(...out.map(p=>p.r));$('gr').innerHTML=`<div class='cap' style='--c:${RC[best]}'></div>`;['pl','p10','bk'].forEach(k=>$(k).disabled=true);[0,300,600,900,1200].forEach((d,k)=>setTimeout(()=>beep(300+k*120+best*60,.15),d));setTimeout(()=>{$('gr').innerHTML=`<div class='flash' style='--c:${RC[best]}'></div>`;beep(1200,.4)},1500);
+ setTimeout(()=>{gachaP(`<div class='rv' style='--c:${RC[best]}'><div class='rays'></div><div class='rbn'>${RN[best]}</div></div><div class='g10'>${out.map(p=>`<div class='gi' style='border-color:${RC[p.r]};color:${RC[p.r]};box-shadow:0 0 ${p.r>=2?10:0}px ${RC[p.r]};background:linear-gradient(180deg,${RC[p.r]}22,transparent)'><b>${RN[p.r]}</b><span>${PT[p.t]}</span><i>${PN[p.r]} +${Math.round(PB[p.r]*100)}%</i></div>`).join('')}</div>`);beep(1320,.3)},2000)}
+const SPON=[{n:'ネオンエナジー',lv:1,d:'3位以内でゴール：+400 Cr.',f:p=>p<=3?400:0},{n:'ターボオイル',lv:3,d:'追い抜き1回ごと +40 Cr.',f:(p,o)=>o*40},{n:'グリップタイヤ',lv:5,d:'コース記録を更新で +600 Cr.',f:(p,o,r)=>r?600:0},{n:'エクストリーム',lv:8,d:'優勝で +1500 Cr.',f:p=>p===1?1500:0}];
+function lvOf(){return Math.floor(Math.sqrt((S.xp||0)/100))+1}
+function recOf(b){try{const o=+localStorage.getItem('nbl'+(crsI||''));return !o||b<o}catch(e){return false}}
+function lvRew(a,b){for(let l=a+1;l<=b;l++){S.coins+=l*200;S.parts.push({id:Date.now()*10+l,t:Math.floor(Math.random()*PT.length),r:Math.min(3,Math.floor(l/4))});XMSG+='　Lv'+l+'！ +'+l*200+'Cr.とパーツ獲得'}}
+function sponsors(){ttl('スポンサー','契約すると、レース後に成功報酬がもらえます');
+ scr.innerHTML=`<div class='gl' style='flex-direction:column;align-items:stretch;max-width:520px'>${SPON.map((s,i)=>{const ok=lvOf()>=s.lv;return `<button class='slot' data-s='${i}' style='text-align:left;font-size:13px;padding:10px;${S.sp===i?'border-color:var(--hot);':''}${ok?'':'opacity:.4'}'><b>${s.n}</b>　<small>${ok?(S.sp===i?'契約中':'契約する'):'Lv.'+s.lv+'で解放'}</small><br>${s.d}</button>`}).join('')}</div><div class='cars'><button id='bk'>戻る</button></div>`;
+ scr.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;if(lvOf()>=SPON[i].lv){S.sp=i;sv();sponsors()}});$('bk').onclick=goHome}
+const EVS=[{id:'e1',n:'ナイトスプリント',d:'ネオン・シティ／夜／雨／5台・3周',crs:12,tod:2,wx:1,rv:5,laps:3,df:1,need:3,c:1500,part:1,maxps:9999},
+{id:'e2',n:'コンパクトカップ',d:'鈴鹿／昼／7台・2周',crs:2,tod:0,wx:0,rv:7,laps:2,df:1,need:3,c:1200,part:1,maxps:400},
+{id:'e3',n:'ボスバトル',d:'北コース1周／強敵CPU　難易度高',crs:0,tod:1,wx:0,rv:3,laps:1,df:1.12,need:1,c:4000,part:3,maxps:9999},
+{id:'e4',n:'スノーラリー',d:'スノー・パス／霧／5台・3周',crs:9,tod:0,wx:2,rv:5,laps:3,df:1,need:2,c:1800,part:2,maxps:9999},
+{id:'e5',n:'ヘアピン・チャレンジ',d:'ヘアピン・ストリート／夕方／9台・4周',crs:7,tod:1,wx:0,rv:9,laps:4,df:1.05,need:1,c:2500,part:2,maxps:9999}];
+function evReward(){if(!EV||pos>EV.need)return{c:0};S.ev[EV.id]=1;S.parts.push({id:Date.now()*10+9,t:Math.floor(Math.random()*PT.length),r:EV.part});XMSG+='　特別戦クリア！'+PN[EV.part]+'パーツ獲得';return{c:EV.c}}
+function special(msg){ttl('スペシャルマッチ','条件を満たして勝つと豪華報酬！');
+ scr.innerHTML=`<div class='gl' style='flex-direction:column;align-items:stretch;max-width:560px'>${EVS.map((e,i)=>`<button class='slot' data-e='${i}' style='text-align:left;font-size:12px;padding:8px 10px;${S.ev[e.id]?'border-color:#7bd06b':''}'><b style='font-size:14px'>${e.n}</b> ${S.ev[e.id]?'<span style=color:#7bd06b>CLEAR</span>':''}<br>${e.d}<br><span class='coin'>${e.need===1?'優勝':e.need+'位以内'}で ${e.c} Cr.＋${PN[e.part]}パーツ</span>${e.maxps<9999?`<br>車の出力 ${e.maxps}PS以下`:''}</button>`).join('')}</div>${msg?`<div class='coin'>${msg}</div>`:''}<div class='cars'><button id='bk'>戻る</button></div>`;
+ scr.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{const e=EVS[+b.dataset.e],t=tune(CARS[S.sel]);if(t.ps>e.maxps){special('この戦いは出力'+e.maxps+'PS以下の車のみ（いまの車は'+t.ps+'PS）');return}setCourse(e.crs);EV=e;start(CARS[S.sel])});$('bk').onclick=goHome}
+function netUp(r,dt){const p=PEERS.find(q=>q.peer===r.peer);if(!p)return;const s=p.presence;if(s.col){r.col=s.col;r.bt=s.bt;r.vr=s.vr;r.nick=s.nick}
+ if(typeof s.d==='number'){const pred=s.d+(Date.now()-p.updatedAt)/1000*(s.sp||0)/SEGM-myStart;r.sp=s.sp||0;r.d+=(pred-r.d)*Math.min(1,dt*8)}
+ if(typeof s.x==='number')r.x+=(s.x-r.x)*Math.min(1,dt*10)}
+async function goOnline(){ttl('オンライン対戦','同じページを同時に開いている人と対戦（ルーム: '+CRS.n+'）');scr.innerHTML=`<div class='coin'>接続中…</div>`;
+ let room=null;try{room=window.claude&&await window.claude.use('room')}catch(e){}
+ const fail=m=>{scr.innerHTML=`<div class='spec' style='text-align:center;max-width:380px'>${m}</div><div class='cars'><button id='bk'>戻る</button></div>`;$('bk').onclick=goHome};
+ if(!room)return fail('この環境ではオンライン対戦が使えません。ページを共有し、2人以上が同時に開くと対戦できます。');
+ try{RM=await room.join('race'+crsI)}catch(e){RM=null;return fail('ルームに入れませんでした。')}
+ ONL=true;LOBBY=true;const c=CARS[S.sel];let myReady=false;
+ const sendP=ready=>RM.presence({nick:S.nick,col:c.col,bt:c.bt,vr:c.vr,car:c.n,ready,d:0,x:0,sp:0}).catch(()=>{});sendP(false);
+ scr.innerHTML=`<div class='spec' style='min-width:330px'><label class='cl'><span>ニックネーム</span><input id='nk' maxlength='12' value='${esc(S.nick)}' style='background:#0e141c;color:#fff;border:1px solid #445;padding:3px 6px'></label><div id='lb'></div></div><div class='cars'><button class='big' id='rd'>準備OK</button><button id='bk'>戻る</button></div>`;
+ $('nk').onchange=e=>{S.nick=e.target.value.replace(/[<>&'"]/g,'').slice(0,12)||'Player';sv();sendP(myReady)};
+ $('rd').onclick=()=>{myReady=!myReady;$('rd').textContent=myReady?'準備取消':'準備OK';sendP(myReady)};
+ $('bk').onclick=()=>{LOBBY=false;goHome()};
+ const upd=ps=>{PEERS=ps.filter(p=>p.kind==='viewer'&&(!p.isMe||p.sameTab));const me=PEERS.find(p=>p.isMe);if(me)MYPEER=me.peer;if(!LOBBY||!$('lb'))return;
+  $('lb').innerHTML=PEERS.map(p=>`<div class='cl'><span>${esc(p.presence.nick||'?')}${p.isMe?'（あなた）':''}</span><span>${esc(p.presence.car||'')}　${p.presence.ready?'✔ 準備OK':'…'}</span></div>`).join('')+`<div class='cl'><span>${PEERS.length}人が参加中（2人以上で開始可能）</span></div>`;
+  if(PEERS.length>=2&&PEERS.every(p=>p.presence.ready)){LOBBY=false;start(CARS[S.sel])}};
+ RM.onPeers(ch=>upd(ch.peers));upd(RM.peers())}
+const GPN=5,GPPT=[25,18,15,12,10,8,6,4,2,1],GPRC=[{crs:13,tod:0,wx:0,laps:3},{crs:14,tod:1,wx:0,laps:3},{crs:15,tod:0,wx:1,laps:3},{crs:16,tod:2,wx:0,laps:3},{crs:17,tod:1,wx:0,laps:2}];
+function nextC(d){let i=crsI;do{i=(i+d+COURSES.length)%COURSES.length}while(COURSES[i].gp);return i}
+function genRoster(){const ns=['リョウ','ケン','ミサキ','タクミ','ユウ','サラ','レン'],pool=CARS.map((c,i)=>i).filter(i=>CARS[i].rr===2||CARS[i].rr===3).sort(()=>Math.random()-.5);return ns.map((n,i)=>{const ci=pool[i%pool.length],c=CARS[ci];return{nick:n,ci,col:c.col,bt:c.bt,vr:c.vr,k:1.05+Math.random()*.07}})}
+function gpFinish(){const G=S.gps,rows=[{g:-1,d:dist}].concat(R.map(r=>({g:r.gid,d:r.d}))).sort((a,b)=>b.d-a.d),me=rows.findIndex(o=>o.g===-1)+1;
+ rows.forEach((o,i)=>{G.pts[o.g]=(G.pts[o.g]||0)+(GPPT[i]||0)});G.res.push(me);G.round++;let msg='　第'+G.round+'戦 '+me+'位 +'+(GPPT[me-1]||0)+'pt';
+ if(G.round>=GPN){const tot=Object.keys(G.pts).map(k=>[+k,G.pts[k]]).sort((a,b)=>b[1]-a[1]),rk=tot.findIndex(e=>e[0]===-1)+1,rw=[[5000,3],[3000,2],[2000,1]][rk-1]||[800,0];S.coins+=rw[0];S.parts.push({id:Date.now()*10+8,t:Math.floor(Math.random()*PT.length),r:rw[1]});S.gpDone=(S.gpDone||0)+1;G.done=1;msg+='　総合'+rk+'位！ +'+rw[0]+'Cr.とパーツ獲得';if(rk===1){S.gpfOpen=true;msg+='　グランプリファイナル解放！（1回出場できます）'}}
+ sv();return msg}
+function gpGo(){const G=S.gps,k=GPRC[G.round];GPR=G.roster;setCourse(k.crs);EV={id:'gp',laps:k.laps,tod:k.tod,wx:k.wx,rv:7,df:1,need:0,c:0,part:0};GPM=true;start(CARS[S.sel])}
+function gpScreen(h,m){GPM=false;FIN=false;ov.style.display='flex';st='menu';ttl('グランプリシリーズ',`全${GPN}戦の合計ポイントで総合順位が決まります`);const G=S.gps,ban=m?`<div class='coin' style='text-align:center'>${esc(h)}<br><small>${esc(m)}</small></div>`:'';
+ if(!G){scr.innerHTML=`<div class='spec' style='text-align:center;max-width:430px'>CPUはSR〜SSRクラスの車で、あなたの車と同じくらいの速さ。GP限定サーキットを全${GPN}戦走り、合計ポイントで総合順位を決めます。<br><span class='coin'>総合優勝：5000 Cr.＋ファクトリーパーツ</span><br>シリーズで総合優勝すると「グランプリファイナル」に1回出場できます（出場後は、また総合優勝すると解放）</div><div class='cars'><button class='big' id='gnew'>シリーズ開始</button>${S.gpfOpen?`<button id='gf' class='big' style='background:#c8a200;border-color:#c8a200'>グランプリファイナル</button>`:''}<button id='bk'>戻る</button></div>`;$('gnew').onclick=()=>{S.gps={round:0,pts:{},res:[],roster:genRoster(),done:0};sv();gpScreen()};if($('gf'))$('gf').onclick=gpFinalGo;$('bk').onclick=goHome;return}
+ const nm=g=>g===-1?S.nick:G.roster[g].nick+(G.roster[g].ci!==undefined?'（'+CARS[G.roster[g].ci].n+'）':''),ids=[-1,0,1,2,3,4,5,6].sort((a,b)=>(G.pts[b]||0)-(G.pts[a]||0));
+ const rounds=GPRC.map((r,i)=>`<div class='cl'><span>第${i+1}戦　${COURSES[r.crs].n}</span><span>${i<G.round?G.res[i]+'位':(i===G.round&&!G.done?'次':'…')}</span></div>`).join('');
+ const tbl=ids.map((g,i)=>`<div class='cl' style='${g===-1?'color:#ff8a3c;font-weight:700':''}'><span>${i+1}. ${esc(nm(g))}</span><span>${G.pts[g]||0}pt</span></div>`).join('');
+ scr.innerHTML=`${ban}<div class='gl'><div class='spec' style='min-width:300px'><b>日程</b>${rounds}</div><div class='spec' style='min-width:220px'><b>総合順位</b>${tbl}</div></div><div class='cars'>${G.done?`<button class='big' id='gnew'>新しいシリーズ</button>`:`<button class='big' id='gn'>第${G.round+1}戦へ</button>`}${S.gpfOpen?`<button id='gf' class='big' style='background:#c8a200;border-color:#c8a200'>グランプリファイナル</button>`:''}<button id='bk'>戻る</button></div>`;
+ if(G.done)$('gnew').onclick=()=>{S.gps=null;sv();gpScreen()};else $('gn').onclick=gpGo;if($('gf'))$('gf').onclick=gpFinalGo;$('bk').onclick=goHome}
+S.names=S.names||{};CARS.forEach((c,i)=>{c.on=c.n;if(S.names[i])c.n=S.names[i]});
+let introT=0,introSkip=false,introList=[];
+C.addEventListener('pointerdown',()=>{if(st==='intro')introSkip=true});
+function genFinalRoster(){const ns=['ショウ','ハル','アキラ','マコト','ジン','カイ','ノア','リク','ゲン'],pool=CARS.map((c,i)=>i).filter(i=>CARS[i].rr>=3).sort(()=>Math.random()-.5);return ns.map((n,i)=>{const ci=pool[i%pool.length],c=CARS[ci];return{nick:n,ci,col:c.col,bt:c.bt,vr:c.vr,k:1.2+Math.random()*.07}})}
+function gpFinalGo(){GPR=genFinalRoster();setCourse(18);FIN=true;EV={id:'gpf',laps:3,tod:2,wx:0,rv:9,df:1,need:0,c:0,part:0};GPM=true;start(CARS[S.sel])}
+function finFinish(){const rw=[[8000,5],[4000,4],[2500,3]][pos-1]||[1000,2];S.coins+=rw[0];S.parts.push({id:Date.now()*10+7,t:Math.floor(Math.random()*PT.length),r:rw[1]});S.gpfOpen=false;S.gpfBest=Math.min(S.gpfBest||99,pos);if(pos===1)S.gpfWins=(S.gpfWins||0)+1;sv();return '　GPファイナル '+pos+'位！ +'+rw[0]+'Cr.と'+PN[rw[1]]+'パーツ'+(pos===1?'　優勝おめでとう！':'')}
+const STG=3.8;
+function drawStage(){const f=Math.min(1,introT/.8),ev=EV,s=1.95;g.fillStyle='rgba(5,8,14,.92)';g.fillRect(0,0,W,H);
+ g.textAlign='center';g.fillStyle='#ff5a36';g.font='700 14px sans-serif';g.fillText('GRAND PRIX FINAL　―　STAGE',W/2,64);
+ g.globalAlpha=f;g.fillStyle='#fff';g.font='700 40px sans-serif';g.fillText(CRS.n,W/2,116);g.globalAlpha=1;
+ const bx=70,by=170;g.lineJoin='round';g.beginPath();for(let i=0;i<=L;i+=4){const p=MP[i],X=bx+p[0]*s,Y=by+p[1]*s;if(i)g.lineTo(X,Y);else g.moveTo(X,Y)}g.closePath();
+ g.strokeStyle='rgba(0,0,0,.6)';g.lineWidth=8;g.stroke();g.strokeStyle='#fff';g.lineWidth=3.5;g.stroke();
+ const p0=MP[0];g.fillStyle='#ff5a36';g.beginPath();g.arc(bx+p0[0]*s,by+p0[1]*s,6,0,6.3);g.fill();
+ g.textAlign='left';g.fillStyle='#fff';g.font='700 19px sans-serif';
+ const rows=['全長　'+CRS.km+' km','周回　'+ev.laps+' 周（合計 '+(CRS.km*ev.laps).toFixed(1)+' km）','時間帯　'+['昼','夕暮れ','夜'][ev.tod]+'　／　天候　'+['晴れ','雨','霧'][ev.wx],'標高差　約 '+Math.round((Math.max(...hh)-Math.min(...hh))*8)+' m','CPU　'+ev.rv+' 台（SSR以上の車）'];
+ rows.forEach((t,i)=>g.fillText(t,420,196+i*36));
+ g.font='14px sans-serif';g.fillStyle='#9fb0c4';g.fillText('主なコーナー',420,396);g.fillStyle='#fff';
+ const names=[...new Set(nm)].slice(1,8);g.fillText(names.slice(0,4).join(' → '),420,420);g.fillText(names.slice(4).join(' → '),420,442);
+ g.textAlign='center';g.font='12px sans-serif';g.fillStyle='#9fb0c4';g.fillText('Enter / クリックでスキップ',W/2,H-16)}
+function drawIntro(){if(introT<STG){drawStage();return}const ti=introT-STG,n=introList.length,k=Math.min(n-1,Math.floor(ti/1.8)),f=(ti%1.8)/1.8,o=introList[k],c=o.me?car:CARS[o.ci],a=Math.min(1,f*4),x0=(1-Math.min(1,f*3))*-220;
+ g.fillStyle='rgba(5,8,14,.88)';g.fillRect(0,0,W,H);g.globalAlpha=.22;g.fillStyle=RC[c.rr]||'#fff';g.fillRect(0,H/2-130,W,260);g.globalAlpha=1;
+ g.save();g.globalAlpha=a;drawC(W/2+x0,H/2+40,2.4,c.col,0,0,c.bt,c.vr);g.restore();
+ g.textAlign='center';g.fillStyle='#fff';g.font='700 34px sans-serif';g.fillText(c.n,W/2,92);g.font='18px sans-serif';g.fillStyle=RC[c.rr];g.fillText(RN[c.rr]+'　'+(o.me?'あなた：':'')+o.n,W/2,126);
+ g.fillStyle='#fff';g.font='700 22px sans-serif';g.fillText(Math.min(MAXPS,c.ps)+'PS　　0-100km/h '+c.t100.toFixed(2)+'秒　　最高速 '+Math.round(c.vmax*3.6)+'km/h',W/2,H-70);
+ for(let i=0;i<n;i++){g.fillStyle=i<=k?'#ff5a36':'rgba(255,255,255,.3)';g.fillRect(W/2-n*10+i*20,H-40,14,4)}
+ g.font='12px sans-serif';g.fillStyle='#9fb0c4';g.fillText('Enter / クリックでスキップ',W/2,H-16);g.fillText('GRAND PRIX FINAL　'+(k+1)+' / '+n,W/2,30)}
+let last=performance.now(),DTS=.016;
+function loop(n){const d0=Math.max(0,Math.min(.05,(n-last)/1000));DTS+=(d0-DTS)*.4;const dt=DTS;last=n;const k=st==='race'?+$('spd').value:1,m=Math.ceil(k);for(let i=0;i<m;i++)update(dt*k/m);draw();sfx();requestAnimationFrame(loop)}
+menu('アペックス・ドライブ',MSG);
+requestAnimationFrame(loop);
+</script></body></html>
